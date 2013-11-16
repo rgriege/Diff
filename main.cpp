@@ -1,4 +1,6 @@
 #include <iostream>
+#include <sstream>
+#include <string>
 
 #include "timer.h"
 #undef max
@@ -46,30 +48,25 @@ void LCS_print_table(int* C, const char* x, const char* y)
 	}
 }
 
-void LCS_read_helper(int*& C, const char*& x, const char*& y, int i, int j, char*& sequence)
+void LCS_read_helper(int*& C, const char*& x, const char*& y, int i, int j, std::ostream& out)
 {
 	if (i == 0 || j == 0) {
 		return;
 	} else if (x[i-1] == y[j-1]) {
-		*sequence = x[i-1];
-		--sequence;
-		LCS_read_helper(C, x, y, i-1, j-1, sequence);
+		out << x[i-1];
+		LCS_read_helper(C, x, y, i-1, j-1, out);
 	} else {
 		if (C[i*cy_len+(j-1)] > C[(i-1)*cy_len+j]) {
-			LCS_read_helper(C, x, y, i, j-1, sequence);
+			LCS_read_helper(C, x, y, i, j-1, out);
 		} else {
-			LCS_read_helper(C, x, y, i-1, j, sequence);
+			LCS_read_helper(C, x, y, i-1, j, out);
 		}
 	}
 }
 
-const char* LCS_read(int* C, const char* x, const char* y, int lcs_len)
+void LCS_read(int* C, const char* x, const char* y, int lcs_len, std::ostream& out)
 {
-	char* sequence = new char[lcs_len+1];
-	sequence[lcs_len] = 0;
-	char* sequence_end = sequence + lcs_len - 1;
-	LCS_read_helper(C, x, y, x_len, y_len, sequence_end);
-	return sequence;
+	LCS_read_helper(C, x, y, x_len, y_len, out);
 }
 
 int main()
@@ -96,7 +93,12 @@ int main()
 	std::cout << "Op took " << end - start << " ms" << std::endl;
 	int lcs_len = LCS_length(C, cx_len, cy_len);
 	std::cout << "LCS Length: " <<  lcs_len << std::endl;
-	std::cout << "LCS Sequence:\n" << LCS_read(C, x, y, lcs_len) << std::endl;
+	std::ostringstream out;
+	LCS_read(C, x, y, lcs_len, out);
+	std::string str = out.str();
+	std::cout << "LCS Sequence:" <<std::endl;
+	for (std::string::reverse_iterator it = str.rbegin(); it != str.rend(); ++it)
+		std::cout << *it;
 	//LCS_print_table(C, x, y);
 	char line[1];
 	std::cin.getline(line, 1);
