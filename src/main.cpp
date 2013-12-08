@@ -95,6 +95,8 @@ void LCS_read(int* C, const char* x, const char* y, int lcs_len, std::ostream& o
 
 int main()
 {
+	// TODO - delineate by word
+
 	/*const char* x = "abcfghijk";
 	const char* y = "abcdefgjk";*/
 	/*const char* x = "compress the size of the changes.";
