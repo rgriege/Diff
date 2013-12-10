@@ -34,7 +34,7 @@ char& BlockedCstring::operator[](int i)
 
 const char& BlockedCstring::operator[](int i) const
 {
-    return operator[](i);
+    return data[i / block_size][i % block_size];
 }
 
 size_t strlen (const char* _Str, size_t max)
