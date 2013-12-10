@@ -1,12 +1,11 @@
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <string>
 
 #include "timer.h"
 #include "BlockedCstring.h"
 #undef max
-
-#define BLOCK_SIZE 56
 
 int cx_len;
 int cy_len;
@@ -94,19 +93,67 @@ void LCS_read(int* C, BlockedCstring& x, BlockedCstring& y, std::ostream& out)
     LCS_read_helper(C, x, y, x.length(), y.length(), out, NORMAL);
 }
 
-int main()
+void transfer_input(std::istream& in, std::ostream& out)
 {
+    char buffer[100];
+    do {
+        in.getline(buffer, 100);
+        out << buffer;
+    } while (strlen(buffer) == 99);
+}
+
+int main(int argc, char* argv[])
+{
+    int block_size = 56;
+    std::istream* original_input_stream = NULL;
+    std::istream* modified_input_stream = NULL;
+    std::ostream* output_stream = NULL;
+
+    // parse args
+    for (int i = 1; i < argc; ++i) {
+        std::string arg(argv[i]);
+        if (arg.length() < 2 || arg[0] != '-') {
+            std::cout << "Invalid arg " << argv[i] << std::endl;
+            return EXIT_FAILURE;
+        } else if (arg.find("original=", 1) != arg.npos) {
+            original_input_stream = new std::ifstream(arg.substr(10).c_str());
+        } else if (arg.find("modified=", 1) != arg.npos) {
+            modified_input_stream = new std::ifstream(arg.substr(10).c_str());
+        } else if (arg.find("output=", 1) != arg.npos) {
+            output_stream = new std::ofstream(arg.substr(8).c_str());
+        } else if (arg.find("block=", 1) != arg.npos) {
+            block_size = atoi(arg.substr(7).c_str());
+        } else {
+            std::cout << "Invalid arg " << argv[i] << std::endl;
+            return EXIT_FAILURE;
+        }
+    }
+
+    if (original_input_stream == NULL) {
+        original_input_stream = new std::stringstream();
+        std::cout << "Original string: ";
+        transfer_input(std::cin, *static_cast<std::stringstream*>(original_input_stream));
+    }
+
+    if (modified_input_stream == NULL) {
+        modified_input_stream = new std::stringstream();
+        std::cout << "Modified string: ";
+        transfer_input(std::cin, *static_cast<std::stringstream*>(modified_input_stream));
+    }
+
+    if (output_stream == NULL) {
+        output_stream = &std::cout;
+    }
+
     // TODO - delineate by word
 
     /*const char* x = "abcfghijk";
     const char* y = "abcdefgjk";*/
     /*const char* x = "compress the size of the changes.";
     const char* y = "compress anything.";*/
-    FILE* original_file = fopen("original.txt", "r");
-    BlockedCstring x(original_file, BLOCK_SIZE);
+    BlockedCstring x(*original_input_stream, block_size);
 
-    FILE* new_file = fopen("new.txt", "r");
-    BlockedCstring y(new_file, BLOCK_SIZE);
+    BlockedCstring y(*modified_input_stream, block_size);
 
     cx_len = x.length() + 1;
     cy_len = y.length() + 1;
@@ -126,6 +173,7 @@ int main()
     std::cout << "LCS Sequence:" <<std::endl;
     for (std::string::reverse_iterator it = str.rbegin(); it != str.rend(); ++it)
         std::cout << *it;
+
     //LCS_print_table(C, x, y);
 
     char line[1];
