@@ -4,14 +4,14 @@
 #include <string>
 
 #include "timer.h"
-#include "BlockedCstring.h"
+#include "BlockedData.h"
 #undef max
 
 int cx_len;
 int cy_len;
 
 template <class T>
-int* LCS_compute_table(BlockedCstring<T>& x, BlockedCstring<T>& y)
+int* LCS_compute_table(BlockedData<T>& x, BlockedData<T>& y)
 {
     int* C = new int[cx_len*cy_len];
     for (int i = 0; i <= x.length(); i++)
@@ -35,7 +35,7 @@ int LCS_length(int* C, int cx_len, int cy_len)
 }
 
 template <class T>
-void LCS_print_table(int* C, BlockedCstring<T>& x, BlockedCstring<T>& y, std::ostream& out)
+void LCS_print_table(int* C, BlockedData<T>& x, BlockedData<T>& y, std::ostream& out)
 {
     out << "  0 ";
     for (int j = 0; j < y.length(); j++)
@@ -66,7 +66,7 @@ void switch_from_mode(OutputMode mode, std::ostream& out)
 }
 
 template <class T>
-void LCS_read_helper(int*& C, BlockedCstring<T>& x, BlockedCstring<T>& y, int i, int j,
+void LCS_read_helper(int*& C, BlockedData<T>& x, BlockedData<T>& y, int i, int j,
                      std::ostream& out, OutputMode mode)
 {
     if (i == 0 || j == 0) {
@@ -92,7 +92,7 @@ void LCS_read_helper(int*& C, BlockedCstring<T>& x, BlockedCstring<T>& y, int i,
 }
 
 template <class T>
-void LCS_read(int* C, BlockedCstring<T>& x, BlockedCstring<T>& y, std::ostream& out)
+void LCS_read(int* C, BlockedData<T>& x, BlockedData<T>& y, std::ostream& out)
 {
     LCS_read_helper(C, x, y, x.length(), y.length(), out, NORMAL);
 }
@@ -148,9 +148,9 @@ int main(int argc, char* argv[])
     if (output_stream == NULL)
         output_stream = &std::cout;
 
-    BlockedCstring<char> x(*original_input_stream, block_size);
+    BlockedData<char> x(*original_input_stream, block_size);
 
-    BlockedCstring<char> y(*modified_input_stream, block_size);
+    BlockedData<char> y(*modified_input_stream, block_size);
 
     cx_len = x.length() + 1;
     cy_len = y.length() + 1;
