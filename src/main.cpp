@@ -10,7 +10,8 @@
 int cx_len;
 int cy_len;
 
-int* LCS_compute_table(BlockedCstring& x, BlockedCstring& y)
+template <class T>
+int* LCS_compute_table(BlockedCstring<T>& x, BlockedCstring<T>& y)
 {
     int* C = new int[cx_len*cy_len];
     for (int i = 0; i <= x.length(); i++)
@@ -33,7 +34,8 @@ int LCS_length(int* C, int cx_len, int cy_len)
     return C[cx_len*cy_len-1];
 }
 
-void LCS_print_table(int* C, BlockedCstring& x, BlockedCstring& y, std::ostream& out)
+template <class T>
+void LCS_print_table(int* C, BlockedCstring<T>& x, BlockedCstring<T>& y, std::ostream& out)
 {
     out << "  0 ";
     for (int j = 0; j < y.length(); j++)
@@ -63,7 +65,8 @@ void switch_from_mode(OutputMode mode, std::ostream& out)
     out << std::endl;
 }
 
-void LCS_read_helper(int*& C, BlockedCstring& x, BlockedCstring& y, int i, int j,
+template <class T>
+void LCS_read_helper(int*& C, BlockedCstring<T>& x, BlockedCstring<T>& y, int i, int j,
                      std::ostream& out, OutputMode mode)
 {
     if (i == 0 || j == 0) {
@@ -88,7 +91,8 @@ void LCS_read_helper(int*& C, BlockedCstring& x, BlockedCstring& y, int i, int j
     }
 }
 
-void LCS_read(int* C, BlockedCstring& x, BlockedCstring& y, std::ostream& out)
+template <class T>
+void LCS_read(int* C, BlockedCstring<T>& x, BlockedCstring<T>& y, std::ostream& out)
 {
     LCS_read_helper(C, x, y, x.length(), y.length(), out, NORMAL);
 }
@@ -141,19 +145,12 @@ int main(int argc, char* argv[])
         transfer_input(std::cin, *static_cast<std::stringstream*>(modified_input_stream));
     }
 
-    if (output_stream == NULL) {
+    if (output_stream == NULL)
         output_stream = &std::cout;
-    }
 
-    // TODO - delineate by word
+    BlockedCstring<char> x(*original_input_stream, block_size);
 
-    /*const char* x = "abcfghijk";
-    const char* y = "abcdefgjk";*/
-    /*const char* x = "compress the size of the changes.";
-    const char* y = "compress anything.";*/
-    BlockedCstring x(*original_input_stream, block_size);
-
-    BlockedCstring y(*modified_input_stream, block_size);
+    BlockedCstring<char> y(*modified_input_stream, block_size);
 
     cx_len = x.length() + 1;
     cy_len = y.length() + 1;
@@ -176,6 +173,7 @@ int main(int argc, char* argv[])
 
     //LCS_print_table(C, x, y);
 
+    std::cout << "Press ENTER to exit...";
     char line[1];
     std::cin.getline(line, 1);
 }

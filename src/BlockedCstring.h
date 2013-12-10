@@ -4,17 +4,18 @@
 #include <istream>
 #include <vector>
 
+template <class T>
 class BlockedCstring {
 public:
     BlockedCstring(FILE* f, int block_size);
     BlockedCstring(std::istream& i, int block_size);
-    char& operator[](int);
-    const char& operator[](int) const;
+    T& operator[](int);
+    const T& operator[](int) const;
     int length() const;
 
 private:
-    std::vector<char*> data;
-    int block_size;
+    std::vector<T*> data;
+    const int block_size;
     int num_blocks;
 };
 
