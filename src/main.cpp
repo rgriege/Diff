@@ -3,22 +3,23 @@
 #include <string>
 
 #include "timer.h"
+#include "BlockedCstring.h"
 #undef max
 
-int x_len;
-int y_len;
+#define BLOCK_SIZE 56
+
 int cx_len;
 int cy_len;
 
-int* LCS_compute_table(const char* x, const char* y)
+int* LCS_compute_table(BlockedCstring& x, BlockedCstring& y)
 {
     int* C = new int[cx_len*cy_len];
-    for (int i = 0; i <= x_len; i++)
+    for (int i = 0; i <= x.length(); i++)
         C[i*cy_len] = 0;
-    for (int j = 0; j <= y_len; j++)
+    for (int j = 0; j <= y.length(); j++)
         C[j] = 0;
-    for (int i = 1; i <= x_len; i++) {
-        for (int j = 1; j <= y_len; j++) {
+    for (int i = 1; i <= x.length(); i++) {
+        for (int j = 1; j <= y.length(); j++) {
             if (x[i-1] == y[j-1])
                 C[i*cy_len+j] = C[(i-1)*cy_len+(j-1)] + 1;
             else
@@ -33,18 +34,18 @@ int LCS_length(int* C, int cx_len, int cy_len)
     return C[cx_len*cy_len-1];
 }
 
-void LCS_print_table(int* C, const char* x, const char* y)
+void LCS_print_table(int* C, BlockedCstring& x, BlockedCstring& y, std::ostream& out)
 {
-    std::cout << "  0 ";
-    for (int j = 0; j < y_len; j++)
-        std::cout << y[j] << " ";
-    std::cout << std::endl;
-    for (int i = 0; i <= x_len; i++) {
-        std::cout << (i == 0 ? '0' : x[i-1]) << " ";
-        for (int j = 0; j <= y_len; j++) {
-            std::cout << C[i*cy_len+j] << " ";
+    out << "  0 ";
+    for (int j = 0; j < y.length(); j++)
+        out << y[j] << " ";
+    out << std::endl;
+    for (int i = 0; i <= x.length(); i++) {
+        out << (i == 0 ? '0' : x[i-1]) << " ";
+        for (int j = 0; j <= y.length(); j++) {
+            out << C[i*cy_len+j] << " ";
         }
-        std::cout << std::endl;
+        out << std::endl;
     }
 }
 
@@ -63,7 +64,7 @@ void switch_from_mode(OutputMode mode, std::ostream& out)
     out << std::endl;
 }
 
-void LCS_read_helper(int*& C, const char*& x, const char*& y, int i, int j,
+void LCS_read_helper(int*& C, BlockedCstring& x, BlockedCstring& y, int i, int j,
                      std::ostream& out, OutputMode mode)
 {
     if (i == 0 || j == 0) {
@@ -88,9 +89,9 @@ void LCS_read_helper(int*& C, const char*& x, const char*& y, int i, int j,
     }
 }
 
-void LCS_read(int* C, const char* x, const char* y, int lcs_len, std::ostream& out)
+void LCS_read(int* C, BlockedCstring& x, BlockedCstring& y, std::ostream& out)
 {
-    LCS_read_helper(C, x, y, x_len, y_len, out, NORMAL);
+    LCS_read_helper(C, x, y, x.length(), y.length(), out, NORMAL);
 }
 
 int main()
@@ -102,34 +103,31 @@ int main()
     /*const char* x = "compress the size of the changes.";
     const char* y = "compress anything.";*/
     FILE* original_file = fopen("original.txt", "r");
-    char x[600];
-    int x_read = fread(x, 1, 600, original_file);
-    x[x_read] = 0;
+    BlockedCstring x(original_file, BLOCK_SIZE);
 
     FILE* new_file = fopen("new.txt", "r");
-    char y[600];
-    int y_read = fread(y, 1, 600, new_file);
-    y[y_read] = 0;
+    BlockedCstring y(new_file, BLOCK_SIZE);
 
-    x_len = strlen(x);
-    y_len = strlen(y);
-    cx_len = x_len + 1;
-    cy_len = y_len + 1;
+    cx_len = x.length() + 1;
+    cy_len = y.length() + 1;
 
-    std::cout << "Comparing strings of size " << x_len << " and " << y_len << std::endl;
+    std::cout << "Comparing strings of size " << x.length() << " and " << y.length() << std::endl;
     long int start = GetTimeInMilliseconds();
     int* C = LCS_compute_table(x, y);
     long int end = GetTimeInMilliseconds();
     std::cout << "Op took " << end - start << " ms" << std::endl;
+
     int lcs_len = LCS_length(C, cx_len, cy_len);
     std::cout << "LCS Length: " <<  lcs_len << std::endl;
+
     std::ostringstream out;
-    LCS_read(C, x, y, lcs_len, out);
+    LCS_read(C, x, y, out);
     std::string str = out.str();
     std::cout << "LCS Sequence:" <<std::endl;
     for (std::string::reverse_iterator it = str.rbegin(); it != str.rend(); ++it)
         std::cout << *it;
     //LCS_print_table(C, x, y);
+
     char line[1];
     std::cin.getline(line, 1);
 }
