@@ -1,8 +1,10 @@
 #include <iostream>
 #include <algorithm>
+#include <array>
 #undef max
 
 #include "BlockedData.h"
+#include "Table.h"
 
 int* LCS_create_table(int x_len, int y_len)
 {
@@ -46,6 +48,23 @@ void LCS_compute_table(T* x, int x_len, T* y, int y_len, int* table)
                 table[i*cy_len+j] = table[(i-1)*cy_len+(j-1)] + 1;
             else
                 table[i*cy_len+j] = std::max(table[i*cy_len+(j-1)], table[(i-1)*cy_len+j]);
+        }
+    }
+}
+
+template <class T>
+void LCS_compute_table(T* x, T* y, Table<int>& table)
+{
+    for (Table<int>::size_type i = 0; i < table.height; i++)
+        table[i][0] = 0;
+    for (Table<int>::size_type j = 0; j < table.width; j++)
+        table[0][j] = 0;
+    for (Table<int>::size_type i = 1; i < table.height; ++i) {
+        for (Table<int>::size_type j = 1; j < table.width; ++j) {
+            if (x[i-1] == y[i-1]) {
+                table[i][j] = table[i-1][j-1] + 1;
+            } else
+                table[i][j] = std::max(table[i][j-1], table[i-1][j]);
         }
     }
 }
@@ -97,6 +116,11 @@ void LCS_compute_table_blocked(T* x, int x_len, T* y, int y_len, int* table, int
 int LCS_length(int* table, int cx_len, int cy_len)
 {
     return table[cx_len*cy_len-1];
+}
+
+int LCS_length(const Table<int>& table)
+{
+    return table[table.height-1][table.width-1];
 }
 
 template <class T>

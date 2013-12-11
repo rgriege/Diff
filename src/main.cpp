@@ -6,6 +6,7 @@
 #include "timer.h"
 #include "BlockedData.h"
 #include "Lcs.h"
+#include "GlobalQueueScheduler.h"
 
 void transfer_input(std::istream& in, std::ostream& out)
 {
@@ -69,15 +70,32 @@ int main(int argc, char* argv[])
     y[modified_input_stream->gcount()] = 0;
     //BlockedData<char> y(*modified_input_stream, block_size);
 
-    std::cout << "Comparing strings of size " << strlen(x) << " and " << strlen(y) << std::endl;
-    long int start = GetTimeInMilliseconds();
-    int* table = LCS_create_table(strlen(x), strlen(y));
-    LCS_compute_table(x, strlen(x), y, strlen(y), table);
-    long int end = GetTimeInMilliseconds();
-    std::cout << "Op took " << end - start << " ms" << std::endl;
+    {
+        Table<int> table(strlen(x), strlen(y));
+        std::cout << "Comparing strings of size " << table.width << " and " << table.height << std::endl;
+        long int start = GetTimeInMilliseconds();
+        LCS_compute_table(x, y, table);
+        long int end = GetTimeInMilliseconds();
+        std::cout << "Op took " << end - start << " ms" << std::endl;
 
-    int lcs_len = LCS_length(table, strlen(x)+1, strlen(y)+1);
-    std::cout << "LCS Length: " <<  lcs_len << std::endl;
+        int lcs_len = LCS_length(table);
+        std::cout << "LCS Length: " <<  lcs_len << std::endl;
+    }
+
+    {
+        int x_len = strlen(x);
+        int y_len = strlen(y);
+        int* table = LCS_create_table(x_len, y_len);
+        std::cout << "Comparing strings of size " << x_len << " and " << y_len << std::endl;
+        long int start = GetTimeInMilliseconds();
+        LCS_compute_table(x, x_len, y, y_len, table);
+        long int end = GetTimeInMilliseconds();
+        std::cout << "Op took " << end - start << " ms" << std::endl;
+
+        int lcs_len = LCS_length(table, x_len+1, y_len+1);
+        std::cout << "LCS Length: " <<  lcs_len << std::endl;
+        delete[] table;
+    }
 
     /*std::ostringstream out;
     LCS_read(C, x, y, out);
@@ -87,5 +105,5 @@ int main(int argc, char* argv[])
     std::cout << *it;*/
 
     //LCS_print_table(C, x, y);
-    delete[] table;
+    //delete[] table;
 }
