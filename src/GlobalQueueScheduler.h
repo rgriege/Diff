@@ -10,6 +10,22 @@
 
 using namespace std;
 
+template <class T>
+void LCS_compute_table_block_ij(T& x, T& y, Block<int>& table)
+{
+    for (size_t i = 0; i <= x.length(); i++)
+        table[i][0] = 0;
+    for (size_t j = 0; j <= y.length(); j++)
+        table[0][j] = 0;
+    for (size_t i = 1; i <= x.length(); ++i) {
+        for (size_t j = 1; j <= y.length(); ++j) {
+            if (x[i-1] == y[j-1])
+                table[i][j] = table[i-1][j-1] + 1;
+            else
+                table[i][j] = std::max(table[i][j-1], table[i-1][j]);
+        }
+    }
+}
 template <typename T>
 struct global_locked_queue : public locked_queue<T> {
     global_locked_queue() : num_waiting_threads(0) {}
@@ -51,8 +67,19 @@ void global_queue_thread_func(global_locked_queue<Block<int> >& g_queue, ArrayTa
         for (unsigned int i = 0; i < acquired_tasks.size(); ++i) {
             /* Process the current node */
             Block<int>& block = acquired_tasks[i];
-            LCS_compute_table_ij_basic();
-            if (block.j
+            LCS_compute_table_block_ij();
+            /* Possibly enqueue the block immediately below */
+            if (block.row < table.height() - 1) {
+                Block<int>& d_block = blocks[block.row+1][block.col];
+                if (d_block.try_enqueue(block.col > 0 ? &blocks[block.row+1][block.col-1] : NULL, &block))
+                    generated_tasks.push_back(d_block);
+            }
+            /* Possibly enqueue the block immediately to the right */
+            if (block.col < table.width() - 1) {
+                Block<int>& r_block = blocks[block.row][block.col+1];
+                if (r_block.try_enqueue(&block, block.row > 0 ? &blocks[block.row-1][block.col+1] : 0))
+                    generated_tasks.push_back(r_block);
+            }
         }
         {
             lock_guard<mutex> q_lk(g_queue.mtx);
@@ -68,7 +95,7 @@ void global_queue_thread_func(global_locked_queue<Block<int> >& g_queue, ArrayTa
 
 void schedule_tasks(ArrayTable<int>& table, int _num_threads, int block_size) {
     /* Intialize the block table, setting the width, height, row increment, and status */
-    Block<int> dataless_block = {0, block_size, block_size, 0, 0, table.width() - block_size, WAITING};
+    Block<int> dataless_block = {0, block_size, block_size, 0, 0, table.width(), WAITING};
     ArrayTable<Block<int> > blocks((table.height() + block_size - 1)/ block_size,
         (table.width() + block_size - 1)/ block_size, dataless_block);
     /* set the data pointer, row, and column for each block */
