@@ -51,12 +51,8 @@ void global_queue_thread_func(global_locked_queue<Block<int> >& g_queue, ArrayTa
         for (unsigned int i = 0; i < acquired_tasks.size(); ++i) {
             /* Process the current node */
             Block<int>& block = acquired_tasks[i];
-            LCS_compute_table_ij(
-            //acquired_tasks[i].execute();
-            //for (auto it = acquired_tasks[i].begin_followup_tasks();
-            //          it != acquired_tasks[i].end_followup_tasks();
-            //          ++it)
-            //    generated_tasks.push_back(*it);
+            LCS_compute_table_ij_basic();
+            if (block.j
         }
         {
             lock_guard<mutex> q_lk(g_queue.mtx);
@@ -72,13 +68,17 @@ void global_queue_thread_func(global_locked_queue<Block<int> >& g_queue, ArrayTa
 
 void schedule_tasks(ArrayTable<int>& table, int _num_threads, int block_size) {
     /* Intialize the block table, setting the width, height, row increment, and status */
-    Block<int> dataless_block = {0, block_size, block_size, table.width() - block_size, WAITING};
+    Block<int> dataless_block = {0, block_size, block_size, 0, 0, table.width() - block_size, WAITING};
     ArrayTable<Block<int> > blocks((table.height() + block_size - 1)/ block_size,
         (table.width() + block_size - 1)/ block_size, dataless_block);
-    /* set the data pointer for each block */
-    for (size_t i = 0; i < blocks.height(); ++i)
-        for (size_t j = 0; j < blocks.width(); ++j)
+    /* set the data pointer, row, and column for each block */
+    for (size_t i = 0; i < blocks.height(); ++i) {
+        for (size_t j = 0; j < blocks.width(); ++j) {
             blocks[i][j].data = &table[i*block_size][j*block_size];
+            blocks[i][j].row = i;
+            blocks[i][j].col = j;
+        }
+    }
 
     num_threads = _num_threads;
 

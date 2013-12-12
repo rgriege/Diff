@@ -11,7 +11,7 @@ struct locked_queue {
     priority_queue<T, Container, Predicate> q;
     mutex mtx;
 
-    const T& next() { return q.front(); }
+    const T& next() { return q.top(); }
     
     locked_queue() {}
     locked_queue(const locked_queue& other) { q = other.q; };
