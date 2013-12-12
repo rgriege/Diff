@@ -1,3 +1,23 @@
+template <class Iterator>
+int* LCS_create_table(Iterator x_begin, Iterator x_end, Iterator y_begin, Iterator y_end)
+{
+    int x_size = 1;
+    auto x_it = x_begin;
+    while(x_it != x_end) {
+        ++x_it;
+        ++x_size;
+    }
+
+    int y_size = 1;
+    auto y_it = y_begin;
+    while(y_it != y_end) {
+        ++y_it;
+        ++y_size;
+    }
+
+    return new int[x_size*y_size];
+}
+
 template <class T>
 void LCS_compute_table(T* x, T* y, Table<int>& table)
 {

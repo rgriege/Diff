@@ -1,32 +1,13 @@
 #include <iostream>
 #include <algorithm>
-#include <array>
+#include <stack>
+#include <stdexcept>
 
 #include "BlockedData.h"
 #include "ArrayTable.h"
 
 #undef max
 #undef min
-
-template <class Iterator>
-int* LCS_create_table(Iterator x_begin, Iterator x_end, Iterator y_begin, Iterator y_end)
-{
-    int x_size = 1;
-    auto x_it = x_begin;
-    while(x_it != x_end) {
-        ++x_it;
-        ++x_size;
-    }
-
-    int y_size = 1;
-    auto y_it = y_begin;
-    while(y_it != y_end) {
-        ++y_it;
-        ++y_size;
-    }
-
-    return new int[x_size*y_size];
-}
 
 //template <class T>
 //void LCS_compute_table_ij(T x, T y, ArrayTable<int> table)
@@ -207,11 +188,90 @@ void LCS_read_helper(const T& x, const T& y, const ArrayTable<int>& table, size_
 }
 
 template <class T>
-void LCS_read(const T& x, const T& y, const ArrayTable<int>& table, std::ostream& out)
+void LCS_read_recursive(const T& x, const T& y, const ArrayTable<int>& table, std::ostream& out)
 {
     std::ostringstream rout;
     LCS_read_helper(x, y, table, x.length(), y.length(), rout, NORMAL);
     std::string str = rout.str();
     for (std::string::reverse_iterator it = str.rbegin(); it != str.rend(); ++it)
         out << *it;
+}
+
+struct change {
+    OutputMode mode;
+    unsigned size;
+};
+
+template <class T>
+void LCS_read(const T& x, const T& y, const ArrayTable<int>& table, std::ostream& out)
+{
+    /* populate stack */
+    std::stack<change> stack;
+    unsigned i = x.length();
+    unsigned j = y.length();
+    change current_change = {NORMAL, 0};
+    while (i != 0 && j != 0) {
+        if (x[i-1] == y[j-1]) {
+            if (current_change.mode != NORMAL) {
+                stack.push(current_change);
+                current_change.size = 0;
+                current_change.mode = NORMAL;
+            }
+            ++current_change.size;
+            --i;
+            --j;
+        } else if (table[i][j-1] > table[i-1][j]) {
+            if (current_change.mode != INSERTION) {
+                stack.push(current_change);
+                current_change.size = 0;
+                current_change.mode = INSERTION;
+            }
+            ++current_change.size;
+            --j;
+        } else {
+            if (current_change.mode != DELETION) {
+                stack.push(current_change);
+                current_change.size = 0;
+                current_change.mode = DELETION;
+            }
+            ++current_change.size;
+            --i;
+        }
+    }
+    stack.push(current_change);
+
+    /* reverse */
+    while (!stack.empty()) {
+        current_change = stack.top();
+        stack.pop();
+        switch (current_change.mode) {
+            case NORMAL:
+            {
+                unsigned max = j + current_change.size;
+                for ( ; j < max; ++j)
+                    out << y[j];
+                i += current_change.size;
+                out << std::endl;
+                break;
+            }
+            case INSERTION:
+            {
+                out << "+";
+                unsigned max = j + current_change.size;
+                for ( ; j < max; ++j)
+                    out << y[j];
+                out << std::endl;
+                break;
+            }
+            case DELETION:
+            {
+                out << "-";
+                unsigned max = i + current_change.size;
+                for ( ; i < max; ++i)
+                    out << x[i];
+                out << std::endl;
+                break;
+            }
+        }
+    }
 }

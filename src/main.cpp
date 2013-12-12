@@ -3,17 +3,17 @@
 #include <sstream>
 #include <string>
 #include <cstring>
+#include <functional>
+#include <cassert>
 #ifndef _WIN32
 #include <papi.h>
 #endif
-#include <functional>
 
 #include "timer.h"
 #include "BlockedData.h"
 #include "ArrayTable.h"
 #include "Source.h"
 #include "Lcs.h"
-#include "GlobalQueueScheduler.h"
 
 #define NUM_EVENTS 2
 
@@ -91,7 +91,23 @@ void test(const std::function<void()>& func, const char* title)
     std::cout << "Op took " << end - start << " ms" << std::endl << std::endl;
 }
 
-bool keep_char(const char& c) { return c != 0; }
+void read(std::istream& in, Source<char>& source)
+{
+    in.read(source, source.length());
+    source.shrink_to_fit();
+}
+
+void read(std::istream& in, Source<std::string>& source, char delim = ' ')
+{
+    char buffer[40];
+    size_t i = 0;
+    do {
+        in.getline(buffer, 40, delim);
+        source[i] = buffer;
+        ++i;
+    } while (in.gcount() > 0);
+    source.shrink_to_fit();
+}
 
 int main(int argc, char* argv[])
 {
@@ -142,33 +158,33 @@ int main(int argc, char* argv[])
 
     int lcs_len;
 
-    Source<char> x(size);
-    original_input_stream->read(x, size);
-    x.shrink_to_fit(keep_char);
+    Source<std::string> x(size);
+    read(*original_input_stream, x);
     //BlockedData<char> x(*original_input_stream, block_size);
 
-    Source<char> y(size);
-    modified_input_stream->read(y, size);
-    y.shrink_to_fit(keep_char);
+    Source<std::string> y(size);
+    read(*modified_input_stream, y);
     //BlockedData<char> y(*modified_input_stream, block_size);
 
     std::cout << "Comparing strings of size " << x.length() << " and " << y.length() << std::endl;
 
     {
         ArrayTable<int> table(x.length() + 1, y.length() + 1);
-        test(std::bind(LCS_compute_table_ij<Source<char> >, std::ref(x), std::ref(y), std::ref(table)),
+        test(std::bind(LCS_compute_table_ij<Source<std::string> >, std::ref(x), std::ref(y), std::ref(table)),
              "Loop Order ij:");
 
         lcs_len = LCS_length(table);
         std::cout << "LCS Length: " <<  lcs_len << std::endl;
 
-        /*LCS_read(x, y, table, std::cout);
-        LCS_print_table(x, y, table, std::cout);*/
+        LCS_read(x, y, table, std::cout);
+        //LCS_print_table(x, y, table, std::cout);
     }
+
+    return 0;
 
     {
         ArrayTable<int> table(x.length() + 1, y.length() + 1);
-        test(std::bind(LCS_compute_table_ji<Source<char> >, std::ref(x), std::ref(y), std::ref(table)),
+        test(std::bind(LCS_compute_table_ji<Source<std::string> >, std::ref(x), std::ref(y), std::ref(table)),
              "Loop Order ji:");
 
         assert(LCS_length(table) == lcs_len);
@@ -178,21 +194,21 @@ int main(int argc, char* argv[])
         std::cout << std::endl << "Block Size: " << b << std::endl;
         {
             ArrayTable<int> table(x.length() + 1, y.length() + 1);
-            test(std::bind(LCS_compute_table_jiji<Source<char> >, std::ref(x), std::ref(y), std::ref(table), b),
+            test(std::bind(LCS_compute_table_jiji<Source<std::string> >, std::ref(x), std::ref(y), std::ref(table), b),
                  "Block Order jiji:");
 
             assert(LCS_length(table) == lcs_len);
         }
         {
             ArrayTable<int> table(x.length() + 1, y.length() + 1);
-            test(std::bind(LCS_compute_table_ijij<Source<char> >, std::ref(x), std::ref(y), std::ref(table), b),
+            test(std::bind(LCS_compute_table_ijij<Source<std::string> >, std::ref(x), std::ref(y), std::ref(table), b),
                  "Block Order ijij:");
 
             assert(LCS_length(table) == lcs_len);
         }
         {
             ArrayTable<int> table(x.length() + 1, y.length() + 1);
-            test(std::bind(LCS_compute_table_jij<Source<char> >, std::ref(x), std::ref(y), std::ref(table), b),
+            test(std::bind(LCS_compute_table_jij<Source<std::string> >, std::ref(x), std::ref(y), std::ref(table), b),
                  "Block Order jij:");
 
             assert(LCS_length(table) == lcs_len);

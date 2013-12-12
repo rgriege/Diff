@@ -1,6 +1,14 @@
 #ifndef __SOURCE_H__
 #define __SOURCE_H__
 
+template <class T>
+struct keep_non_default {
+    bool operator() (const T& t) const { return t != T(); }
+    typedef T first_argument_type;
+    typedef T second_argument_type;
+    typedef bool result_type;
+};
+
 template <class T, class Allocator = std::allocator<T> >
 class Source {
 
@@ -34,8 +42,8 @@ public:
 
     size_type length() const { return len; }
 
-    template <class Predicate>
-    void shrink_to_fit(const Predicate& predicate)
+    template <class Predicate = keep_non_default<value_type> >
+    void shrink_to_fit(const Predicate& predicate = Predicate())
     {
         /* temporarily preserve the old data */
         pointer old_data = data;
