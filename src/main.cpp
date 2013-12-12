@@ -157,17 +157,9 @@ int main(int argc, char* argv[])
         lcs_len = LCS_length(table);
         std::cout << "LCS Length: " <<  lcs_len << std::endl;
 
-        std::ostringstream out;
-        LCS_read(x, y, table, out);
-        std::string str = out.str();
-        std::cout << "LCS Sequence:" <<std::endl;
-        for (std::string::reverse_iterator it = str.rbegin(); it != str.rend(); ++it)
-        std::cout << *it;
-
-        LCS_print_table(x, y, table, std::cout);
+        /*LCS_read(x, y, table, std::cout);
+        LCS_print_table(x, y, table, std::cout);*/
     }
-
-    return 0;
 
     {
         ArrayTable<int> table(x.length() + 1, y.length() + 1);

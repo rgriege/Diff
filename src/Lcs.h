@@ -210,5 +210,9 @@ void LCS_read_helper(const T& x, const T& y, const ArrayTable<int>& table, size_
 template <class T>
 void LCS_read(const T& x, const T& y, const ArrayTable<int>& table, std::ostream& out)
 {
-    LCS_read_helper(x, y, table, x.length(), y.length(), out, NORMAL);
+    std::ostringstream rout;
+    LCS_read_helper(x, y, table, x.length(), y.length(), rout, NORMAL);
+    std::string str = rout.str();
+    for (std::string::reverse_iterator it = str.rbegin(); it != str.rend(); ++it)
+        out << *it;
 }
