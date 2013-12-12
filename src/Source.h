@@ -42,6 +42,51 @@ public:
 
     size_type length() const { return len; }
 
+#ifdef _WIN32
+    void shrink_to_fit()
+    {
+        /* temporarily preserve the old data */
+        pointer old_data = data;
+        size_type old_len = len;
+
+        /* find the amount to shrink */
+        keep_non_default<value_type> predicate;
+        while (len > 0 && !predicate(data[len-1]))
+            --len;
+
+        /* allocate and fill the new space */
+        data = a.allocate(len);
+        for (size_type i = 0; i < len; ++i)
+            a.construct(data + i, old_data[i]);
+
+        /* destroy and deallocate the old space */
+        for (size_type i = 0; i < old_len; ++i)
+            a.destroy(old_data + i);
+        a.deallocate(old_data, old_len);
+    }
+
+    template <class Predicate>
+    void shrink_to_fit(const Predicate& predicate)
+    {
+        /* temporarily preserve the old data */
+        pointer old_data = data;
+        size_type old_len = len;
+
+        /* find the amount to shrink */
+        while (len > 0 && !predicate(data[len-1]))
+            --len;
+
+        /* allocate and fill the new space */
+        data = a.allocate(len);
+        for (size_type i = 0; i < len; ++i)
+            a.construct(data + i, old_data[i]);
+
+        /* destroy and deallocate the old space */
+        for (size_type i = 0; i < old_len; ++i)
+            a.destroy(old_data + i);
+        a.deallocate(old_data, old_len);
+    }
+#else
     template <class Predicate = keep_non_default<value_type> >
     void shrink_to_fit(const Predicate& predicate = Predicate())
     {
@@ -63,6 +108,7 @@ public:
             a.destroy(old_data + i);
         a.deallocate(old_data, old_len);
     }
+#endif
 
 private:
     size_type len;
