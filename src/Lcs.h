@@ -248,6 +248,7 @@ void LCS_read(const T& x, const T& y, const ArrayTable<int>& table, std::ostream
             case NORMAL:
             {
                 unsigned max = j + current_change.size;
+                out << "\033[0m\n";
                 for ( ; j < max; ++j)
                     out << y[j];
                 i += current_change.size;
@@ -256,6 +257,7 @@ void LCS_read(const T& x, const T& y, const ArrayTable<int>& table, std::ostream
             }
             case INSERTION:
             {
+                out << "\033[1;32m";
                 out << "+";
                 unsigned max = j + current_change.size;
                 for ( ; j < max; ++j)
@@ -265,6 +267,7 @@ void LCS_read(const T& x, const T& y, const ArrayTable<int>& table, std::ostream
             }
             case DELETION:
             {
+                out << "\033[1;31m";
                 out << "-";
                 unsigned max = i + current_change.size;
                 for ( ; i < max; ++i)
