@@ -19,8 +19,8 @@
 
 void handle_error(int i)
 {
-  printf("Encountered error %d\n", i);
-  assert(0 > 1);
+    printf("Encountered error %d\n", i);
+    assert(0 > 1);
 }
 
 void transfer_input(std::istream& in, std::ostream& out)
@@ -49,37 +49,42 @@ void test(const std::function<void()>& func, const char* title)
     std::cout << "testing " << title << std::endl;
     
 #ifndef _WIN32
-    int Events[NUM_EVENTS] = { PAPI_L1_DCM, PAPI_L2_TCM };
-    long_long values[NUM_EVENTS] = {0, 0};
+    {
+        int Events[NUM_EVENTS] = { PAPI_L1_DCM, PAPI_L2_TCM };
+        long_long values[NUM_EVENTS] = {0, 0};
 
-    if (PAPI_start_counters(Events, NUM_EVENTS) != PAPI_OK)
-      handle_error(1);
+        if (PAPI_start_counters(Events, NUM_EVENTS) != PAPI_OK)
+            handle_error(1);
 
-    func();
+        func();
 
-    if (PAPI_stop_counters(values, NUM_EVENTS) != PAPI_OK)
-      handle_error(1);
+        if (PAPI_stop_counters(values, NUM_EVENTS) != PAPI_OK)
+            handle_error(1);
 
-    std::cout << "L1 Data misses: " << values[0] << std::endl;
-    std::cout << "L2 Total misses: " << values[1] << std::endl;
+        std::cout << "L1 Data misses: " << values[0] << std::endl;
+        std::cout << "L2 Total misses: " << values[1] << std::endl;
 
-    flush_cache();
-    Events = { PAPI_LST_INS, PAPI_L1_ICM };
-    values = {0, 0};
+        flush_cache();
+    }
+    {
+        int Events[NUM_EVENTS] = { PAPI_LST_INS, PAPI_L1_ICM };
+        long_long values[NUM_EVENTS] = {0, 0};
 
-    if (PAPI_start_counters(Events, NUM_EVENTS) != PAPI_OK)
-      handle_error(1);
+        if (PAPI_start_counters(Events, NUM_EVENTS) != PAPI_OK)
+            handle_error(1);
 
-    func();
+        func();
 
-    if (PAPI_stop_counters(values, NUM_EVENTS) != PAPI_OK)
-      handle_error(1);
+        if (PAPI_stop_counters(values, NUM_EVENTS) != PAPI_OK)
+            handle_error(1);
 
-    std::cout << "Total load/stores: " << values[0] << std::endl;
-    std::cout << "L1 Instruction misses: " << values[1] << std::endl;
+        std::cout << "Total load/stores: " << values[0] << std::endl;
+        std::cout << "L1 Instruction misses: " << values[1] << std::endl;
+
+        flush_cache();
+    }
 #endif
 
-    flush_cache();
     long int start = GetTimeInMilliseconds();
     func();
     long int end = GetTimeInMilliseconds();
