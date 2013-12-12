@@ -1,8 +1,10 @@
-#ifndef __TABLE_H__
-#define __TABLE_H__
+#ifndef __BLOCKED_TABLE_H__
+#define __BLOCKED_TABLE_H__
+
+#include <memory>
 
 template <class T, class ColumnAllocator = std::allocator<T> >
-class TableRow {
+class BlockedTableRow {
 
     typedef T value_type;
     typedef T* pointer;
@@ -11,14 +13,14 @@ class TableRow {
     typedef std::size_t size_type;
 
 public:
-    TableRow(size_type _width, const_reference _val = value_type(), const ColumnAllocator& _a = ColumnAllocator())
+    BlockedTableRow(size_type _width, const_reference _val = value_type(), const ColumnAllocator& _a = ColumnAllocator())
         : a(_a), width(_width), data(a.allocate(width))
     {
         for (pointer p = data; p < data + width; ++p)
             a.construct(p, _val);
     }
 
-    ~TableRow()
+    ~BlockedTableRow()
     {
         for (pointer p = data; p < data + width; ++p)
             a.destroy(p);
@@ -36,8 +38,8 @@ private:
     pointer data;
 };
 
-template <class T, class ColumnAllocator = std::allocator<T>, class RowAllocator = std::allocator<TableRow<T, ColumnAllocator> > >
-class Table {
+template <class T, class ColumnAllocator = std::allocator<T>, class RowAllocator = std::allocator<BlockedTableRow<T, ColumnAllocator> > >
+class BlockedTable {
 public:
 
     typedef T value_type;
@@ -46,32 +48,32 @@ public:
     typedef const value_type& const_reference;
     typedef std::size_t size_type;
 
-   Table(size_type _width, size_type _height, const_reference _val = value_type(),
+   BlockedTable(size_type _width, size_type _height, const_reference _val = value_type(),
          const RowAllocator& _ra = RowAllocator(),
          const ColumnAllocator& _ca = ColumnAllocator())
         : width(_width), height(_height), ra(_ra)
     {
         rows = ra.allocate(height);
-        for (TableRow<T, ColumnAllocator>* p = rows; p < rows + height; ++p)
+        for (BlockedTableRow<T, ColumnAllocator>* p = rows; p < rows + height; ++p)
             ra.construct(p, width, _val, _ca);
     }
 
-    ~Table()
+    ~BlockedTable()
     {
-        for (TableRow<T, ColumnAllocator>* p = rows; p < rows + height; ++p)
+        for (BlockedTableRow<T, ColumnAllocator>* p = rows; p < rows + height; ++p)
             ra.destroy(p);
         ra.deallocate(rows, height);
     }
 
-    TableRow<T, ColumnAllocator>& operator[](int i) { return rows[i]; }
-    const TableRow<T, ColumnAllocator>& operator[](int i) const { return rows[i]; }
+    BlockedTableRow<T, ColumnAllocator>& operator[](int i) { return rows[i]; }
+    const BlockedTableRow<T, ColumnAllocator>& operator[](int i) const { return rows[i]; }
 
     const size_type width;
     const size_type height;
 
 private:
     RowAllocator ra;
-    TableRow<T, ColumnAllocator>* rows;
+    BlockedTableRow<T, ColumnAllocator>* rows;
 };
 
 #endif
