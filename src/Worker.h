@@ -4,16 +4,16 @@
 class Scheduler;
 
 class Worker {
-private:
-    Worker(Scheduler& _scheduler);
-
-    void start();
-
 public:
-    static Worker* create(Scheduler& scheduler);
+    Worker(Scheduler& _scheduler);
+    Worker(const Worker& other);
 
     void operator() ();
 
+    unsigned id;
+    static unsigned n;
+
+private:
     Scheduler& scheduler;
 }; 
 

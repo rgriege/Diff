@@ -142,7 +142,7 @@ void LCS_print_table(const T& x, const T& y, const ArrayTable<int>& table, std::
     for (size_t i = 0; i < x.length(); i++) {
         out << x[i] << " ";
         for (size_t j = 0; j < table.width(); j++)
-            out << table[i+1][j] << " ";
+            out << table[i][j] << " ";
         out << std::endl;
     }
 }

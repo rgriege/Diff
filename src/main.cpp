@@ -106,8 +106,8 @@ void test(const std::function<void()>& func, const char* title)
         if (PAPI_stop_counters(values, NUM_EVENTS) != PAPI_OK)
             handle_error(1);
 
-        std::cout << "L1 Data misses: " << values[0] << std::endl;
-        std::cout << "L2 Total misses: " << values[1] << std::endl;
+        *output_stream << "L1 Data misses: " << values[0] << std::endl;
+        *output_stream << "L2 Total misses: " << values[1] << std::endl;
 
         flush_cache();
     }
@@ -123,8 +123,8 @@ void test(const std::function<void()>& func, const char* title)
         if (PAPI_stop_counters(values, NUM_EVENTS) != PAPI_OK)
             handle_error(1);
 
-        std::cout << "Total load/stores: " << values[0] << std::endl;
-        std::cout << "L1 Instruction misses: " << values[1] << std::endl;
+        *output_stream << "Total load/stores: " << values[0] << std::endl;
+        *output_stream << "L1 Instruction misses: " << values[1] << std::endl;
 
         flush_cache();
     }
@@ -133,7 +133,7 @@ void test(const std::function<void()>& func, const char* title)
     long int start = GetTimeInMilliseconds();
     func();
     long int end = GetTimeInMilliseconds();
-    std::cout << "Op took " << end - start << " ms" << std::endl << std::endl;
+    *output_stream << "Op took " << end - start << " ms" << std::endl << std::endl;
 }
 
 void read(std::istream& in, Source<char>& source)
@@ -165,7 +165,7 @@ void run_tests()
 
     int lcs_len;
 
-    std::cout << "Comparing arrays of size " << x.length() << " and " << y.length() << std::endl << std::endl;
+    *output_stream << "Comparing arrays of size " << x.length() << " and " << y.length() << std::endl << std::endl;
 
     for (unsigned i = 0; i < strlen(tests); ++i) {
         ArrayTable<int> table(x.length() + 1, y.length() + 1);
@@ -201,14 +201,14 @@ void run_tests()
             break;
         }
         if (print_sequence)
-            LCS_read(x, y, table, std::cout);
+            LCS_read(x, y, table, *output_stream);
         if (print_table)
-            LCS_print_table(x, y, table, std::cout);
+            LCS_print_table(x, y, table, *output_stream);
         if (i == 0) {
             lcs_len = LCS_length(table);
-            std::cout << "LCS length: " << lcs_len << std::endl;
+            *output_stream << "LCS length: " << lcs_len << std::endl;
         } else if (LCS_length(table) != lcs_len) {
-            std::cout << "failed" << std::endl;
+            *output_stream << "failed" << std::endl;
         }
     }
 }
@@ -274,15 +274,20 @@ int main(int argc, char* argv[])
 
     switch(type) {
     case CHAR_TEST:
-        std::cout << "Diffing by character" << std::endl;
+        *output_stream << "Diffing by character" << std::endl;
         run_tests<char>();
         break;
     case WORD_TEST:
-        std::cout << "Diffing by word" << std::endl;
+        *output_stream << "Diffing by word" << std::endl;
         run_tests<std::string>();
         break;
     case LINE_TEST:
-        std::cout << "unsupported" << std::endl;
+        *output_stream << "unsupported" << std::endl;
         break;
     }
+
+#ifdef _DEBUG
+    std::cout << "Press Enter to exit...";
+    std::cin.ignore(1);
+#endif
 }

@@ -3,6 +3,7 @@
 
 #include <mutex>
 #include <queue>
+#include <condition_variable>
 
 using namespace std;
 
@@ -10,6 +11,7 @@ template <class T, class Container = std::vector<T>, class Predicate = less<clas
 struct locked_queue {
     priority_queue<T, Container, Predicate> q;
     mutex mtx;
+    condition_variable cv;
 
     const T& next() { return q.top(); }
     

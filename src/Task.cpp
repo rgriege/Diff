@@ -1,9 +1,12 @@
 #include <cassert>
+#include <iostream>
 
 #include "Task.h"
 
+static unsigned n = 0;
+
 Task::Task(std::function<void()> _func, TaskStatus _status, unsigned _priority)
-    : func(_func), priority(_priority), status(_status) {}
+    : func(_func), priority(_priority), status(_status), id(n++) {}
 
 void Task::add_prerequisite(Task* task)
 {
@@ -34,6 +37,7 @@ void Task::schedule()
 {
     assert(status == READY);
     status = SCHEDULED;
+    //std::cout << "Task " << id << " scheduled" << std::endl;
 }
 
 void Task::execute()
@@ -42,4 +46,5 @@ void Task::execute()
     func();
     //std::lock_guard<std::mutex> status_lk(status_mtx);
     status = COMPLETE;
+    //std::cout << "Task " << id << " executed" << std::endl;
 }

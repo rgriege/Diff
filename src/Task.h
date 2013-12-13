@@ -27,6 +27,8 @@ public:
 
     bool operator<(const Task& rhs) const { return priority < rhs.priority; }
 
+    unsigned id;
+
 private:
     const std::function<void()> func;
     const unsigned priority;

@@ -4,11 +4,19 @@
 #include "Task.h"
 #include "ArrayTable.h"
 
+struct Point {
+    size_t row;
+    size_t col;
+};
+
 struct Block {
     size_t row;
     size_t col;
     size_t width;
     size_t height;
+
+    size_t max_col() { return col + width; }
+    size_t max_row() { return row + height; }
 };
 
 template <class T>
@@ -36,11 +44,11 @@ void LCS_compute_top_block_ij(T& x, T& y, ArrayTable<int>& table, Block block)
 {
     assert(block.row == 0);
 
-    for (size_t j = block.col; j < block.width; ++j)
+    for (size_t j = block.col; j < block.max_col(); ++j)
         table[0][j] = 0;
 
     for (size_t i = block.row+1; i < block.height; ++i) {
-        for (size_t j = block.col; j < block.width; ++j) {
+        for (size_t j = block.col; j < block.max_col(); ++j) {
             if (x[i-1] == y[j-1])
                 table[i][j] = table[i-1][j-1] + 1;
             else
@@ -54,7 +62,7 @@ void LCS_compute_left_block_ij(T& x, T& y, ArrayTable<int>& table, Block block)
 {
     assert(block.col == 0);
 
-    for (size_t i = block.row; i < block.height; ++i) {
+    for (size_t i = block.row; i < block.max_row(); ++i) {
         table[i][0] = 0;
         for (size_t j = 1; j < block.width; ++j) {
             if (x[i-1] == y[j-1])
@@ -71,8 +79,8 @@ void LCS_compute_inner_block_ij(T& x, T& y, ArrayTable<int>& table, Block block)
     assert(block.row > 0);
     assert(block.col > 0);
 
-    for (size_t i = block.row; i < block.height; ++i) {
-        for (size_t j = block.col; j < block.width; ++j) {
+    for (size_t i = block.row; i < block.max_row(); ++i) {
+        for (size_t j = block.col; j < block.max_col(); ++j) {
             if (x[i-1] == y[j-1])
                 table[i][j] = table[i-1][j-1] + 1;
             else
@@ -94,18 +102,18 @@ void LCS_compute_table_gpq(T& x, T& y, ArrayTable<int>& table, unsigned thread_c
 
     /* Create the task array... */
     ArrayTable<Task*> tasks(num_block_rows, num_block_cols);
+    Block tlb = {0, 0, block_padding_width ? block_padding_width : block_width,
+            block_padding_height ? block_padding_height : block_height};
     /* ...by first populating the top left, possibly irregularly-sized block... */
     {
-        Block b = {0, 0, block_padding_width ? block_padding_width : block_width,
-            block_padding_height ? block_padding_height : block_height};
-        tasks[0][0] = new Task(std::bind(LCS_compute_corner_block_ij<T>, std::ref(x), std::ref(y), std::ref(table), b), READY);
+        tasks[0][0] = new Task(std::bind(LCS_compute_corner_block_ij<T>, std::ref(x), std::ref(y), std::ref(table), tlb), READY);
         scheduler.add_task(tasks[0][0]);
     }
     /* ...and then all the left, possibly irregular-width blocks... */
     {
         Block b = {0, 0, block_padding_width ? block_padding_width : block_width, block_height};
         for (unsigned i = 1; i < num_block_rows; ++i) {
-            b.row = i;
+            b.row = (i-1)*block_height + tlb.height;
             tasks[i][0] = new Task(std::bind(LCS_compute_left_block_ij<T>, std::ref(x), std::ref(y), std::ref(table), b));
             tasks[i][0]->add_prerequisite(tasks[i-1][0]);
             scheduler.add_postrequisite(tasks[i-1][0], tasks[i][0]);
@@ -115,7 +123,7 @@ void LCS_compute_table_gpq(T& x, T& y, ArrayTable<int>& table, unsigned thread_c
     {
         Block b = {0, 0, block_width, block_padding_height ? block_padding_height : block_height};
         for (unsigned j = 1; j < num_block_cols; ++j) {
-            b.col = j;
+            b.col = (j-1)*block_width + tlb.width;
             tasks[0][j] = new Task(std::bind(LCS_compute_top_block_ij<T>, std::ref(x), std::ref(y), std::ref(table), b));
             tasks[0][j]->add_prerequisite(tasks[0][j-1]);
             scheduler.add_postrequisite(tasks[0][j-1], tasks[0][j]);
@@ -124,7 +132,7 @@ void LCS_compute_table_gpq(T& x, T& y, ArrayTable<int>& table, unsigned thread_c
     /* ...and then all the inner, normal sized blocks. */
     for (unsigned i = 1; i < num_block_rows; ++i) {
         for (unsigned j = 1; j < num_block_cols; ++j) {
-            Block b = {i, j, block_width, block_height};
+            Block b = {(i-1)*block_height + tlb.height, (j-1)*block_width + tlb.width, block_width, block_height};
             tasks[i][j] = new Task(std::bind(LCS_compute_inner_block_ij<T>, std::ref(x), std::ref(y), std::ref(table), b));
             tasks[i][j]->add_prerequisite(tasks[i-1][j]);
             tasks[i][j]->add_prerequisite(tasks[i][j-1]);
@@ -133,5 +141,6 @@ void LCS_compute_table_gpq(T& x, T& y, ArrayTable<int>& table, unsigned thread_c
         }
     }
 
+    std::cout << "Running scheduler with " << num_block_cols * num_block_rows << " tasks" << std::endl;
     scheduler.run();
 }

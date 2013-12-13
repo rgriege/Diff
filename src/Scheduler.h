@@ -45,7 +45,8 @@ private:
     std::mutex mtx;
     std::condition_variable cv;
     std::multimap<Task*, Task*> postreqs;
-    std::vector<Worker*> workers;
+
+    unsigned num_tasks;
 };
 
 #endif

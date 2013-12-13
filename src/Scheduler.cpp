@@ -1,15 +1,19 @@
 #include <cassert>
+#include <thread>
+#include <iostream>
 
 #include "Scheduler.h"
 
 Scheduler::Scheduler(size_type _worker_count)
-    : worker_count(_worker_count), waiting_worker_count(0) {}
+    : worker_count(_worker_count), waiting_worker_count(0), num_tasks(0) {}
 
 void Scheduler::add_task(Task* task)
 {
     assert(task != NULL);
-    if (task->is_ready())
+    if (task->is_ready()) {
+        task->schedule();
         queue.push(task);
+    }
 }
 
 void Scheduler::add_postrequisite(Task* task, Task* postrequisite)
@@ -21,8 +25,12 @@ void Scheduler::add_postrequisite(Task* task, Task* postrequisite)
 
 void Scheduler::run()
 {
+    std::vector<Worker> workers(worker_count, Worker(*this));
+    std::thread* threads = new std::thread[worker_count];
     for (size_type i = 0; i < worker_count; ++i)
-        workers.push_back(Worker::create(*this));
+        threads[i] = std::thread(workers[i]);
+    for (size_type i = 0; i < worker_count; ++i)
+        threads[i].join();
 }
 
 Task* Scheduler::check_out()
@@ -34,7 +42,8 @@ Task* Scheduler::check_out()
         if (waiting_worker_count == worker_count) {
             cv.notify_all();
         } else {
-            while(queue.empty() && !waiting_worker_count == worker_count)
+            std::cout << "worker waiting, progress: " << num_tasks << std::endl << std::flush;
+            while(queue.empty() && waiting_worker_count != worker_count)
                 cv.wait(lk);
         }
         if (waiting_worker_count == worker_count)
@@ -42,6 +51,7 @@ Task* Scheduler::check_out()
         else
             waiting_worker_count--;
     }
+    ++num_tasks;
     Task* task = queue.top();
     queue.pop();
     return task;
