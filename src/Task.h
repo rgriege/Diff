@@ -4,7 +4,11 @@
 #include <functional>
 #include <deque>
 #include <mutex>
+#ifndef LONESTAR
 #include <atomic>
+#else
+#include <cstdatomic>
+#endif
 
 enum TaskStatus {
     WAITING,
