@@ -41,6 +41,7 @@ public:
     operator const_pointer() const { return data; }
 
     size_type length() const { return len; }
+    size_type size() const { return len; }
 
 #ifdef _WIN32
     void shrink_to_fit()

@@ -67,9 +67,9 @@ void LCS_compute_table_ijij(T& x, T& y, Table& table, int block_size)
     for (size_t j = 0; j < table.width(); j++)
         table[0][j] = 0;
     for (size_t ii = 1; ii < table.height(); ii += block_size) {
-        size_t imax = std::min(ii+block_size, x.length());
+        size_t imax = std::min(ii+block_size, x.size());
         for (size_t jj = 1; jj < table.width(); jj += block_size) {
-            size_t jmax = std::min(jj+block_size, y.length());
+            size_t jmax = std::min(jj+block_size, y.size());
             for (size_t i = ii; i <= imax; ++i) {
                 for (size_t j = jj; j <= jmax; ++j) {
                     if (x[i-1] == y[j-1])
@@ -90,9 +90,9 @@ void LCS_compute_table_jiji(T& x, T& y, Table& table, int block_size)
     for (size_t j = 0; j < table.width(); j++)
         table[0][j] = 0;
     for (size_t jj = 1; jj < table.width(); jj += block_size) {
-        size_t jmax = std::min(jj+block_size, y.length());
+        size_t jmax = std::min(jj+block_size, y.size());
         for (size_t ii = 1; ii < table.height(); ii += block_size) {
-            size_t imax = std::min(ii+block_size, x.length());
+            size_t imax = std::min(ii+block_size, x.size());
             for (size_t j = jj; j <= jmax; ++j) {
                 for (size_t i = ii; i <= imax; ++i) {
                     if (x[i-1] == y[j-1])
@@ -113,7 +113,7 @@ void LCS_compute_table_jij(T& x, T& y, Table& table, int block_size)
     for (size_t j = 0; j < table.width(); j++)
         table[0][j] = 0;
     for (size_t jj = 1; jj < table.width(); jj += block_size) {
-        size_t jmax = std::min(jj+block_size, y.length());
+        size_t jmax = std::min(jj+block_size, y.size());
         for (size_t i = 1; i < table.height(); ++i) {
             for (size_t j = jj; j <= jmax; ++j) {
                 if (x[i-1] == y[j-1])
@@ -135,10 +135,10 @@ template <class T, class Table>
 void LCS_print_table(const T& x, const T& y, const Table& table, std::ostream& out)
 {
     out << "  0 ";
-    for (size_t j = 0; j < y.length(); j++)
+    for (size_t j = 0; j < y.size(); j++)
         out << y[j] << " ";
     out << std::endl;
-    for (size_t i = 0; i < x.length(); i++) {
+    for (size_t i = 0; i < x.size(); i++) {
         out << x[i] << " ";
         for (size_t j = 0; j < table.width(); j++)
             out << table[i][j] << " ";
@@ -191,7 +191,7 @@ template <class T, class Table>
 void LCS_read_recursive(const T& x, const T& y, const Table& table, std::ostream& out)
 {
     std::ostringstream rout;
-    LCS_read_helper(x, y, table, x.length(), y.length(), rout, NORMAL);
+    LCS_read_helper(x, y, table, x.size(), y.size(), rout, NORMAL);
     std::string str = rout.str();
     for (std::string::reverse_iterator it = str.rbegin(); it != str.rend(); ++it)
         out << *it;
@@ -207,8 +207,8 @@ void LCS_read(const T& x, const T& y, const Table& table, std::ostream& out)
 {
     /* populate stack */
     std::stack<change> stack;
-    unsigned i = x.length();
-    unsigned j = y.length();
+    unsigned i = x.size();
+    unsigned j = y.size();
     change current_change = {NORMAL, 0};
     while (i != 0 && j != 0) {
         if (x[i-1] == y[j-1]) {
