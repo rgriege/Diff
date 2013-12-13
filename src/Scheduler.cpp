@@ -51,7 +51,7 @@ Task* Scheduler::check_out()
             waiting_worker_count--;
     }
     ++num_tasks;
-    Task* task = queue.top();
+    Task* task = queue.front();
     queue.pop();
     return task;
 }

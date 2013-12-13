@@ -4,23 +4,11 @@
 #include <functional>
 #include <mutex>
 #include <map>
-#include <vector>
 #include <queue>
 #include <condition_variable>
 
 #include "Task.h"
 #include "Worker.h"
-
-template <class T>
-struct less_ptr {
-    bool operator() (const T* lhs, const T* rhs) const
-    {
-        return *lhs < *rhs;
-    }
-    typedef T* first_argument_type;
-    typedef T* second_argument_type;
-    typedef bool result_type;
-};
 
 class Scheduler {
 
@@ -41,7 +29,7 @@ public:
 private:
     const size_type worker_count;
     size_type waiting_worker_count;
-    std::priority_queue<Task*, std::vector<Task*>, less_ptr<Task> > queue;
+    std::queue<Task*> queue;
     std::mutex mtx;
     std::condition_variable cv;
     std::multimap<Task*, Task*> postreqs;

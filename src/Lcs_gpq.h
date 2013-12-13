@@ -90,7 +90,7 @@ void LCS_compute_inner_block_ij(T& x, T& y, ArrayTable<int>& table, Block block)
 }
 
 template <class T>
-void LCS_compute_table_gpq(T& x, T& y, ArrayTable<int>& table, unsigned thread_count, unsigned block_width, unsigned block_height) {
+void LCS_compute_table_gq(T& x, T& y, ArrayTable<int>& table, unsigned thread_count, unsigned block_width, unsigned block_height) {
     Scheduler scheduler(thread_count);
 
     unsigned num_normal_block_rows = table.height() / block_height;
@@ -141,6 +141,9 @@ void LCS_compute_table_gpq(T& x, T& y, ArrayTable<int>& table, unsigned thread_c
         }
     }
 
-    std::cout << "Running scheduler with " << num_block_cols * num_block_rows << " tasks" << std::endl;
     scheduler.run();
+    
+    for (unsigned i = 0; i < tasks.height(); ++i)
+        for (unsigned j = 0; j < tasks.width(); ++j)
+            delete tasks[i][j];
 }

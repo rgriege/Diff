@@ -77,10 +77,11 @@ void show_help()
     std::cout << "  -tests=[a-f]" << std::endl;
     std::cout << "    a : Loop Order ij" << std::endl;
     std::cout << "    b : Loop Order ji" << std::endl;
-    std::cout << "    c : Threaded:" << std::endl;
-    std::cout << "    d : Block Order jiji" << std::endl;
-    std::cout << "    e : Block Order ijij" << std::endl;
-    std::cout << "    f : Block Order jij" << std::endl;
+    std::cout << "    c : Block Order jiji" << std::endl;
+    std::cout << "    d : Block Order ijij" << std::endl;
+    std::cout << "    e : Block Order jij" << std::endl;
+    std::cout << "    f : Threaded Queue:" << std::endl;
+    std::cout << "    g : Threaded Priority Queue:" << std::endl;
     std::cout << "  -block=[size]" << std::endl;
     std::cout << "  -block_range" << std::endl;
     std::cout << "  -threads=[num]" << std::endl;
@@ -132,9 +133,9 @@ void test(const std::function<void()>& func, const char* title)
     }
 #endif
 
-    long int start = GetTimeInSeconds();
+    long int start = GetTimeInMilliseconds();
     func();
-    long int end = GetTimeInSeconds();
+    long int end = GetTimeInMilliseconds();
     *output_stream << "Diff took " << end - start << " sec" << std::endl << std::endl;
 }
 
@@ -183,26 +184,30 @@ void run_tests()
             test(std::bind(LCS_compute_table_ji<Source<T> >, std::ref(x), std::ref(y), std::ref(table)), "Loop Order ji:");
             break;
         case 'c':
-            for (unsigned b = block_ranged ? 1 : block_size; b <= block_size; ++b)
-                for (unsigned t = thread_ranged ? 1 : num_threads; t <= num_threads; ++t)
-                    test(std::bind(LCS_compute_table_gpq<Source<T> >, std::ref(x), std::ref(y), std::ref(table), t, b, b), "Threaded:");
-            break;
-        case 'd':
             for (unsigned b = block_ranged ? 1 : block_size; b <= block_size; ++b) {
                 std::cout << std::endl << "Block Size: " << b << std::endl;
                 test(std::bind(LCS_compute_table_jiji<Source<T> >, std::ref(x), std::ref(y), std::ref(table), b), "Block Order jiji:");
             }
             break;
-        case 'e':
+        case 'd':
             for (unsigned b = block_ranged ? 1 : block_size; b <= block_size; ++b) {
                 std::cout << std::endl << "Block Size: " << b << std::endl;
                 test(std::bind(LCS_compute_table_ijij<Source<T> >, std::ref(x), std::ref(y), std::ref(table), b), "Block Order ijij:");
             }
             break;
-        case 'f':
+        case 'e':
             for (unsigned b = block_ranged ? 1 : block_size; b <= block_size; ++b) {
                 std::cout << std::endl << "Block Size: " << b << std::endl;
                 test(std::bind(LCS_compute_table_jij<Source<T> >, std::ref(x), std::ref(y), std::ref(table), b), "Block Order jij:");
+            }
+            break;
+        case 'f':
+            for (unsigned b = block_ranged ? 1 : block_size; b <= block_size; ++b) {
+                std::cout << std::endl << "Block Size: " << b << std::endl;
+                for (unsigned t = thread_ranged ? 1 : num_threads; t <= num_threads; ++t) {
+                    std::cout << "Threads: " << t << std::endl;
+                    test(std::bind(LCS_compute_table_gq<Source<T> >, std::ref(x), std::ref(y), std::ref(table), t, b, b), "Threaded Queue:");
+                }
             }
             break;
         }
