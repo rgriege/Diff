@@ -203,7 +203,7 @@ struct change {
 };
 
 template <class T, class Table>
-void LCS_read(const T& x, const T& y, const Table& table, std::ostream& out)
+void LCS_read(const T& x, const T& y, const Table& table, std::ostream& out, char delim = 0)
 {
     /* populate stack */
     std::stack<change> stack;
@@ -250,8 +250,10 @@ void LCS_read(const T& x, const T& y, const Table& table, std::ostream& out)
             {
                 unsigned max = j + current_change.size;
                 out << DEFAULT;
-                for ( ; j < max; ++j)
+                for ( ; j < max; ++j) {
                     out << y[j];
+                    if (delim) out << delim;
+                }
                 i += current_change.size;
                 out << std::endl;
                 break;
@@ -261,8 +263,10 @@ void LCS_read(const T& x, const T& y, const Table& table, std::ostream& out)
                 out << GREEN;
                 out << "+";
                 unsigned max = j + current_change.size;
-                for ( ; j < max; ++j)
+                for ( ; j < max; ++j) {
                     out << y[j];
+                    if (delim) out << delim;
+                }
                 out << std::endl;
                 break;
             }
@@ -271,8 +275,10 @@ void LCS_read(const T& x, const T& y, const Table& table, std::ostream& out)
                 out << RED;
                 out << "-";
                 unsigned max = i + current_change.size;
-                for ( ; i < max; ++i)
+                for ( ; i < max; ++i) {
                     out << x[i];
+                    if (delim) out << delim;
+                }
                 out << std::endl;
                 break;
             }

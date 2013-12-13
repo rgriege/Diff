@@ -234,7 +234,7 @@ void run_tests()
             break;
         }
         if (print_sequence)
-            LCS_read(x, y, table, *output_stream);
+            LCS_read(x, y, table, *output_stream, delim);
         if (print_table)
             LCS_print_table(x, y, table, *output_stream);
         if (i == 0) {
@@ -315,6 +315,7 @@ int main(int argc, char* argv[])
     switch(type) {
     case CHAR_TEST:
         *output_stream << "Diffing by character" << std::endl;
+        delim = 0;
         run_tests<std::vector<char>, ArrayTable<int> >();
         break;
     case WORD_TEST:
