@@ -42,7 +42,6 @@ Task* Scheduler::check_out()
         if (waiting_worker_count == worker_count) {
             cv.notify_all();
         } else {
-            std::cout << "worker waiting, progress: " << num_tasks << std::endl << std::flush;
             while(queue.empty() && waiting_worker_count != worker_count)
                 cv.wait(lk);
         }
@@ -63,8 +62,11 @@ void Scheduler::check_in(Task* task)
     for (auto it = it_pair.first; it != it_pair.second; ++it) {
         if (it->second->is_ready()) {
             it->second->schedule();
-            std::lock_guard<std::mutex> q_lk(mtx);
-            queue.push(it->second);
+            {
+                std::lock_guard<std::mutex> q_lk(mtx);
+                queue.push(it->second);
+            }
+            cv.notify_one();
         }
     }
 }
