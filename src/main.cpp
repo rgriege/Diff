@@ -21,7 +21,8 @@
 enum test_type {
     CHAR_TEST,
     WORD_TEST,
-    LINE_TEST
+    LINE_TEST,
+    SENT_TEST
 };
 
 std::istream* original_input_stream = NULL;
@@ -32,7 +33,7 @@ unsigned block_size = 56;
 bool block_ranged = false;
 unsigned num_threads = 1;
 bool thread_ranged = false;
-test_type type = CHAR_TEST;
+test_type type = LINE_TEST;
 char delim = '\n';
 unsigned size = 0;
 bool print_table = false;
@@ -87,7 +88,7 @@ void show_help()
     std::cout << "  -block_range" << std::endl;
     std::cout << "  -threads=[num]" << std::endl;
     std::cout << "  -thread_range" << std::endl;
-    std::cout << "  -type=[char|word|line]" << std::endl;
+    std::cout << "  -type=[char|word|line|sent]" << std::endl;
     std::cout << "  -print_table" << std::endl;
     std::cout << "  -print_sequence" << std::endl;
     std::cout << "  -help" << std::endl;
@@ -275,7 +276,7 @@ int main(int argc, char* argv[])
         } else if (arg.find("thread_range", 1) != arg.npos) {
             thread_ranged = true;
         } else if (arg.find("type=", 1) != arg.npos) {
-            type = arg.substr(6) == "char" ? CHAR_TEST : arg.substr(6) == "word" ? WORD_TEST : LINE_TEST;
+            type = arg.substr(6) == "char" ? CHAR_TEST : arg.substr(6) == "word" ? WORD_TEST : arg.substr(6) == "sent" ? SENT_TEST : LINE_TEST;
         } else if (arg.find("print_table", 1) != arg.npos) {
             print_table = true;
         } else if (arg.find("print_sequence", 1) != arg.npos) {
@@ -324,6 +325,11 @@ int main(int argc, char* argv[])
     case LINE_TEST:
         *output_stream << "Diffing by line" << std::endl;
         delim = '\n';
+        run_tests<std::vector<std::string>, ArrayTable<int> >();
+        break;
+    case SENT_TEST:
+        *output_stream << "Diffing by sentence" << std::endl;
+        delim = '.';
         run_tests<std::vector<std::string>, ArrayTable<int> >();
         break;
     }
