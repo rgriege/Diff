@@ -146,24 +146,28 @@ void read(std::istream& in, Source<char>& source)
 
 void read(std::istream& in, Source<std::string>& source, char delim = ' ')
 {
-    char buffer[40];
+    char buffer[200];
     size_t i = 0;
     do {
-        in.getline(buffer, 40, delim);
+        in.getline(buffer, 200, delim);
         source[i] = buffer;
         ++i;
-    } while (in.gcount() > 0);
+    } while (!in.eof());
     source.shrink_to_fit();
 }
 
 template <class T>
 void run_tests()
 {
+    long int start = GetTimeInMilliseconds();
     Source<T> x(size);
     read(*original_input_stream, x);
 
     Source<T> y(size);
     read(*modified_input_stream, y);
+    long int end = GetTimeInMilliseconds();
+
+    std::cout << "Read took " << (end - start) << " ms" << std::endl;
 
     int lcs_len;
 
