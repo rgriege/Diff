@@ -12,8 +12,8 @@
 #include "Worker.h"
 
 template <class T>
-struct std::less<T*> {
-    bool operator() (const T* const& lhs, const T* const& rhs)
+struct less_ptr {
+    bool operator() (const T* lhs, const T* rhs) const
     {
         return *lhs < *rhs;
     }
@@ -41,7 +41,7 @@ public:
 private:
     const size_type worker_count;
     size_type waiting_worker_count;
-    std::priority_queue<Task*, std::vector<Task*>, std::less<Task*> > queue;
+    std::priority_queue<Task*, std::vector<Task*>, less_ptr<Task> > queue;
     std::mutex mtx;
     std::condition_variable cv;
     std::multimap<Task*, Task*> postreqs;

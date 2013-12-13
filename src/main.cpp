@@ -26,7 +26,7 @@ enum test_type {
 std::istream* original_input_stream = NULL;
 std::istream* modified_input_stream = NULL;
 std::ostream* output_stream = NULL;
-char* tests = "";
+char* tests = NULL;
 unsigned block_size = 56;
 bool block_ranged = false;
 unsigned num_threads = 1;
@@ -253,6 +253,10 @@ int main(int argc, char* argv[])
             std::cout << "Invalid arg " << argv[i] << std::endl;
             return EXIT_FAILURE;
         }
+    }
+
+    if (!tests) {
+        tests = new char[1]{0};
     }
 
     if (original_input_stream == NULL) {
