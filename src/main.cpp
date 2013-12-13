@@ -33,6 +33,7 @@ bool block_ranged = false;
 unsigned num_threads = 1;
 bool thread_ranged = false;
 test_type type = CHAR_TEST;
+char delim = '\n';
 unsigned size = 0;
 bool print_table = false;
 bool print_sequence = false;
@@ -82,7 +83,6 @@ void show_help()
     std::cout << "    d : Block Order ijij" << std::endl;
     std::cout << "    e : Block Order jij" << std::endl;
     std::cout << "    f : Threaded Queue:" << std::endl;
-    std::cout << "    g : Threaded Priority Queue:" << std::endl;
     std::cout << "  -block=[size]" << std::endl;
     std::cout << "  -block_range" << std::endl;
     std::cout << "  -threads=[num]" << std::endl;
@@ -95,7 +95,7 @@ void show_help()
 
 void test(const std::function<void()>& func, const char* title)
 {
-    std::cout << "testing " << title << std::endl;
+    *output_stream << "testing " << title << std::endl;
     
 #ifndef _WIN32
     {
@@ -137,7 +137,7 @@ void test(const std::function<void()>& func, const char* title)
     long int start = GetTimeInMilliseconds();
     func();
     long int end = GetTimeInMilliseconds();
-    *output_stream << "Diff took " << end - start << " sec" << std::endl << std::endl;
+    *output_stream << "Diff took " << end - start << " ms" << std::endl << std::endl;
 }
 
 void read(std::istream& in, Source<char>& source)
@@ -146,7 +146,7 @@ void read(std::istream& in, Source<char>& source)
     source.shrink_to_fit();
 }
 
-void read(std::istream& in, Source<std::string>& source, char delim = ' ')
+void read(std::istream& in, Source<std::string>& source)
 {
     char buffer[200];
     size_t i = 0;
@@ -168,7 +168,7 @@ void read(std::istream& in, std::vector<char>& source)
     source.shrink_to_fit();
 }
 
-void read(std::istream& in, std::vector<std::string>& source, char delim = ' ')
+void read(std::istream& in, std::vector<std::string>& source)
 {
     char buffer[200];
     do {
@@ -189,7 +189,7 @@ void run_tests()
     read(*modified_input_stream, y);
     long int end = GetTimeInMilliseconds();
 
-    std::cout << "Read took " << (end - start) << " ms" << std::endl;
+    *output_stream << "Read took " << (end - start) << " ms" << std::endl;
 
     int lcs_len;
 
@@ -205,28 +205,28 @@ void run_tests()
             test(std::bind(LCS_compute_table_ji<Container, Table>, std::ref(x), std::ref(y), std::ref(table)), "Loop Order ji:");
             break;
         case 'c':
-            for (unsigned b = block_ranged ? 1 : block_size; b <= block_size; ++b) {
-                std::cout << std::endl << "Block Size: " << b << std::endl;
+            for (unsigned b = block_ranged ? 64 : block_size; b <= block_size; b *= 2) {
+                *output_stream << std::endl << "Block Size: " << b << std::endl;
                 test(std::bind(LCS_compute_table_jiji<Container, Table>, std::ref(x), std::ref(y), std::ref(table), b), "Block Order jiji:");
             }
             break;
         case 'd':
-            for (unsigned b = block_ranged ? 1 : block_size; b <= block_size; ++b) {
-                std::cout << std::endl << "Block Size: " << b << std::endl;
+            for (unsigned b = block_ranged ? 64 : block_size; b <= block_size; b *= 2) {
+                *output_stream << std::endl << "Block Size: " << b << std::endl;
                 test(std::bind(LCS_compute_table_ijij<Container, Table>, std::ref(x), std::ref(y), std::ref(table), b), "Block Order ijij:");
             }
             break;
         case 'e':
-            for (unsigned b = block_ranged ? 1 : block_size; b <= block_size; ++b) {
-                std::cout << std::endl << "Block Size: " << b << std::endl;
+            for (unsigned b = block_ranged ? 64 : block_size; b <= block_size; b *= 2) {
+                *output_stream << std::endl << "Block Size: " << b << std::endl;
                 test(std::bind(LCS_compute_table_jij<Container, Table>, std::ref(x), std::ref(y), std::ref(table), b), "Block Order jij:");
             }
             break;
         case 'f':
-            for (unsigned b = block_ranged ? 1 : block_size; b <= block_size; ++b) {
-                std::cout << std::endl << "Block Size: " << b << std::endl;
+            for (unsigned b = block_ranged ? 64 : block_size; b <= block_size; b *= 2) {
+                *output_stream << std::endl << "Block Size: " << b << std::endl;
                 for (unsigned t = thread_ranged ? 1 : num_threads; t <= num_threads; ++t) {
-                    std::cout << "Threads: " << t << std::endl;
+                    *output_stream << "Threads: " << t << std::endl;
                     test(std::bind(LCS_compute_table_gq<Container, Table>, std::ref(x), std::ref(y), std::ref(table), t, b, b), "Threaded Queue:");
                 }
             }
@@ -318,10 +318,13 @@ int main(int argc, char* argv[])
         break;
     case WORD_TEST:
         *output_stream << "Diffing by word" << std::endl;
+        delim = ' ';
         run_tests<std::vector<std::string>, ArrayTable<int> >();
         break;
     case LINE_TEST:
-        *output_stream << "unsupported" << std::endl;
+        *output_stream << "Diffing by line" << std::endl;
+        delim = '\n';
+        run_tests<std::vector<std::string>, ArrayTable<int> >();
         break;
     }
 
