@@ -13,7 +13,7 @@
 #include "timer.h"
 #include "BlockedData.h"
 #include "ArrayTable.h"
-#include "BlockedTable.h"
+#include "IndirectRowTable.h"
 #include "Source.h"
 #include "Lcs.h"
 #include "Lcs_gpq.h"
