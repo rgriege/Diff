@@ -13,6 +13,7 @@
 #include "timer.h"
 #include "BlockedData.h"
 #include "ArrayTable.h"
+#include "BlockedTable.h"
 #include "Source.h"
 #include "Lcs.h"
 #include "Lcs_gpq.h"
@@ -157,7 +158,7 @@ void read(std::istream& in, Source<std::string>& source, char delim = ' ')
     source.shrink_to_fit();
 }
 
-template <class T>
+template <class T, class Table>
 void run_tests()
 {
     long int start = GetTimeInMilliseconds();
@@ -175,30 +176,31 @@ void run_tests()
     *output_stream << "Comparing arrays of size " << x.length() << " and " << y.length() << std::endl << std::endl;
 
     for (unsigned i = 0; i < strlen(tests); ++i) {
-        ArrayTable<int> table(x.length() + 1, y.length() + 1);
+        //if (x.length() < 24000 && y.length() < 24000)
+        Table table(x.length() + 1, y.length() + 1);
         switch (tests[i]) {
         case 'a':
-            test(std::bind(LCS_compute_table_ij<Source<T> >, std::ref(x), std::ref(y), std::ref(table)), "Loop Order ij:");
+            test(std::bind(LCS_compute_table_ij<Source<T>, Table>, std::ref(x), std::ref(y), std::ref(table)), "Loop Order ij:");
             break;
         case 'b':
-            test(std::bind(LCS_compute_table_ji<Source<T> >, std::ref(x), std::ref(y), std::ref(table)), "Loop Order ji:");
+            test(std::bind(LCS_compute_table_ji<Source<T>, Table>, std::ref(x), std::ref(y), std::ref(table)), "Loop Order ji:");
             break;
         case 'c':
             for (unsigned b = block_ranged ? 1 : block_size; b <= block_size; ++b) {
                 std::cout << std::endl << "Block Size: " << b << std::endl;
-                test(std::bind(LCS_compute_table_jiji<Source<T> >, std::ref(x), std::ref(y), std::ref(table), b), "Block Order jiji:");
+                test(std::bind(LCS_compute_table_jiji<Source<T>, Table>, std::ref(x), std::ref(y), std::ref(table), b), "Block Order jiji:");
             }
             break;
         case 'd':
             for (unsigned b = block_ranged ? 1 : block_size; b <= block_size; ++b) {
                 std::cout << std::endl << "Block Size: " << b << std::endl;
-                test(std::bind(LCS_compute_table_ijij<Source<T> >, std::ref(x), std::ref(y), std::ref(table), b), "Block Order ijij:");
+                test(std::bind(LCS_compute_table_ijij<Source<T>, Table>, std::ref(x), std::ref(y), std::ref(table), b), "Block Order ijij:");
             }
             break;
         case 'e':
             for (unsigned b = block_ranged ? 1 : block_size; b <= block_size; ++b) {
                 std::cout << std::endl << "Block Size: " << b << std::endl;
-                test(std::bind(LCS_compute_table_jij<Source<T> >, std::ref(x), std::ref(y), std::ref(table), b), "Block Order jij:");
+                test(std::bind(LCS_compute_table_jij<Source<T>, Table>, std::ref(x), std::ref(y), std::ref(table), b), "Block Order jij:");
             }
             break;
         case 'f':
@@ -206,7 +208,7 @@ void run_tests()
                 std::cout << std::endl << "Block Size: " << b << std::endl;
                 for (unsigned t = thread_ranged ? 1 : num_threads; t <= num_threads; ++t) {
                     std::cout << "Threads: " << t << std::endl;
-                    test(std::bind(LCS_compute_table_gq<Source<T> >, std::ref(x), std::ref(y), std::ref(table), t, b, b), "Threaded Queue:");
+                    test(std::bind(LCS_compute_table_gq<Source<T>, Table>, std::ref(x), std::ref(y), std::ref(table), t, b, b), "Threaded Queue:");
                 }
             }
             break;
@@ -293,11 +295,11 @@ int main(int argc, char* argv[])
     switch(type) {
     case CHAR_TEST:
         *output_stream << "Diffing by character" << std::endl;
-        run_tests<char>();
+        run_tests<char, ArrayTable<int> >();
         break;
     case WORD_TEST:
         *output_stream << "Diffing by word" << std::endl;
-        run_tests<std::string>();
+        run_tests<std::string, ArrayTable<int> >();
         break;
     case LINE_TEST:
         *output_stream << "unsupported" << std::endl;

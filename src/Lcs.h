@@ -3,15 +3,13 @@
 #include <stack>
 #include <stdexcept>
 
-#include "BlockedData.h"
-#include "ArrayTable.h"
 #include "TextColor.h"
 
 #undef max
 #undef min
 
 //template <class T>
-//void LCS_compute_table_ij(T x, T y, ArrayTable<int> table)
+//void LCS_compute_table_ij(T x, T y, Table table)
 //{
 //    for (size_t i = 0; i < table.height(); i++)
 //        table.at(i, 0) = 0;
@@ -27,8 +25,8 @@
 //    }
 //}
 
-template <class T>
-void LCS_compute_table_ij(T& x, T& y, ArrayTable<int>& table)
+template <class T, class Table>
+void LCS_compute_table_ij(T& x, T& y, Table& table)
 {
     for (size_t i = 0; i < table.height(); i++)
         table[i][0] = 0;
@@ -44,8 +42,8 @@ void LCS_compute_table_ij(T& x, T& y, ArrayTable<int>& table)
     }
 }
 
-template <class T>
-void LCS_compute_table_ji(T& x, T& y, ArrayTable<int>& table)
+template <class T, class Table>
+void LCS_compute_table_ji(T& x, T& y, Table& table)
 {
     for (size_t i = 0; i < table.height(); i++)
         table[i][0] = 0;
@@ -61,8 +59,8 @@ void LCS_compute_table_ji(T& x, T& y, ArrayTable<int>& table)
     }
 }
 
-template <class T>
-void LCS_compute_table_ijij(T& x, T& y, ArrayTable<int>& table, int block_size)
+template <class T, class Table>
+void LCS_compute_table_ijij(T& x, T& y, Table& table, int block_size)
 {
     for (size_t i = 0; i < table.height(); i++)
         table[i][0] = 0;
@@ -84,8 +82,8 @@ void LCS_compute_table_ijij(T& x, T& y, ArrayTable<int>& table, int block_size)
     }
 }
 
-template <class T>
-void LCS_compute_table_jiji(T& x, T& y, ArrayTable<int>& table, int block_size)
+template <class T, class Table>
+void LCS_compute_table_jiji(T& x, T& y, Table& table, int block_size)
 {
     for (size_t i = 0; i < table.height(); i++)
         table[i][0] = 0;
@@ -107,8 +105,8 @@ void LCS_compute_table_jiji(T& x, T& y, ArrayTable<int>& table, int block_size)
     }
 }
 
-template <class T>
-void LCS_compute_table_jij(T& x, T& y, ArrayTable<int>& table, int block_size)
+template <class T, class Table>
+void LCS_compute_table_jij(T& x, T& y, Table& table, int block_size)
 {
     for (size_t i = 0; i < table.height(); i++)
         table[i][0] = 0;
@@ -127,13 +125,14 @@ void LCS_compute_table_jij(T& x, T& y, ArrayTable<int>& table, int block_size)
     }
 }
 
-int LCS_length(const ArrayTable<int>& table)
+template <class Table>
+int LCS_length(const Table& table)
 {
     return table[table.height()-1][table.width()-1];
 }
 
-template <class T>
-void LCS_print_table(const T& x, const T& y, const ArrayTable<int>& table, std::ostream& out)
+template <class T, class Table>
+void LCS_print_table(const T& x, const T& y, const Table& table, std::ostream& out)
 {
     out << "  0 ";
     for (size_t j = 0; j < y.length(); j++)
@@ -162,8 +161,8 @@ void switch_from_mode(OutputMode mode, std::ostream& out)
     out << std::endl;
 }
 
-template <class T>
-void LCS_read_helper(const T& x, const T& y, const ArrayTable<int>& table, size_t i, size_t j,
+template <class T, class Table>
+void LCS_read_helper(const T& x, const T& y, const Table& table, size_t i, size_t j,
                      std::ostream& out, OutputMode mode)
 {
     if (i == 0 || j == 0) {
@@ -188,8 +187,8 @@ void LCS_read_helper(const T& x, const T& y, const ArrayTable<int>& table, size_
     }
 }
 
-template <class T>
-void LCS_read_recursive(const T& x, const T& y, const ArrayTable<int>& table, std::ostream& out)
+template <class T, class Table>
+void LCS_read_recursive(const T& x, const T& y, const Table& table, std::ostream& out)
 {
     std::ostringstream rout;
     LCS_read_helper(x, y, table, x.length(), y.length(), rout, NORMAL);
@@ -203,8 +202,8 @@ struct change {
     unsigned size;
 };
 
-template <class T>
-void LCS_read(const T& x, const T& y, const ArrayTable<int>& table, std::ostream& out)
+template <class T, class Table>
+void LCS_read(const T& x, const T& y, const Table& table, std::ostream& out)
 {
     /* populate stack */
     std::stack<change> stack;

@@ -2,25 +2,10 @@
 
 #include "Scheduler.h"
 #include "Task.h"
-#include "ArrayTable.h"
+#include "Block.h"
 
-struct Point {
-    size_t row;
-    size_t col;
-};
-
-struct Block {
-    size_t row;
-    size_t col;
-    size_t width;
-    size_t height;
-
-    size_t max_col() { return col + width; }
-    size_t max_row() { return row + height; }
-};
-
-template <class T>
-void LCS_compute_corner_block_ij(T& x, T& y, ArrayTable<int>& table, Block block)
+template <class T, class Table>
+void LCS_compute_corner_block_ij(T& x, T& y, Table& table, Block block)
 {
     assert(block.row == 0);
     assert(block.col == 0);
@@ -39,8 +24,8 @@ void LCS_compute_corner_block_ij(T& x, T& y, ArrayTable<int>& table, Block block
     }
 }
 
-template <class T>
-void LCS_compute_top_block_ij(T& x, T& y, ArrayTable<int>& table, Block block)
+template <class T, class Table>
+void LCS_compute_top_block_ij(T& x, T& y, Table& table, Block block)
 {
     assert(block.row == 0);
 
@@ -57,8 +42,8 @@ void LCS_compute_top_block_ij(T& x, T& y, ArrayTable<int>& table, Block block)
     }
 }
 
-template <class T>
-void LCS_compute_left_block_ij(T& x, T& y, ArrayTable<int>& table, Block block)
+template <class T, class Table>
+void LCS_compute_left_block_ij(T& x, T& y, Table& table, Block block)
 {
     assert(block.col == 0);
 
@@ -73,8 +58,8 @@ void LCS_compute_left_block_ij(T& x, T& y, ArrayTable<int>& table, Block block)
     }
 }
 
-template <class T>
-void LCS_compute_inner_block_ij(T& x, T& y, ArrayTable<int>& table, Block block)
+template <class T, class Table>
+void LCS_compute_inner_block_ij(T& x, T& y, Table& table, Block block)
 {
     assert(block.row > 0);
     assert(block.col > 0);
@@ -89,8 +74,8 @@ void LCS_compute_inner_block_ij(T& x, T& y, ArrayTable<int>& table, Block block)
     }
 }
 
-template <class T>
-void LCS_compute_table_gq(T& x, T& y, ArrayTable<int>& table, unsigned thread_count, unsigned block_width, unsigned block_height) {
+template <class T, class Table>
+void LCS_compute_table_gq(T& x, T& y, Table& table, unsigned thread_count, unsigned block_width, unsigned block_height) {
     Scheduler scheduler(thread_count);
 
     unsigned num_normal_block_rows = table.height() / block_height;
@@ -106,7 +91,7 @@ void LCS_compute_table_gq(T& x, T& y, ArrayTable<int>& table, unsigned thread_co
             block_padding_height ? block_padding_height : block_height};
     /* ...by first populating the top left, possibly irregularly-sized block... */
     {
-        tasks[0][0] = new Task(std::bind(LCS_compute_corner_block_ij<T>, std::ref(x), std::ref(y), std::ref(table), tlb), READY);
+        tasks[0][0] = new Task(std::bind(LCS_compute_corner_block_ij<T, Table>, std::ref(x), std::ref(y), std::ref(table), tlb), READY);
         scheduler.add_task(tasks[0][0]);
     }
     /* ...and then all the left, possibly irregular-width blocks... */
@@ -114,7 +99,7 @@ void LCS_compute_table_gq(T& x, T& y, ArrayTable<int>& table, unsigned thread_co
         Block b = {0, 0, block_padding_width ? block_padding_width : block_width, block_height};
         for (unsigned i = 1; i < num_block_rows; ++i) {
             b.row = (i-1)*block_height + tlb.height;
-            tasks[i][0] = new Task(std::bind(LCS_compute_left_block_ij<T>, std::ref(x), std::ref(y), std::ref(table), b));
+            tasks[i][0] = new Task(std::bind(LCS_compute_left_block_ij<T, Table>, std::ref(x), std::ref(y), std::ref(table), b));
             tasks[i][0]->add_prerequisite(tasks[i-1][0]);
             scheduler.add_postrequisite(tasks[i-1][0], tasks[i][0]);
         }
@@ -124,7 +109,7 @@ void LCS_compute_table_gq(T& x, T& y, ArrayTable<int>& table, unsigned thread_co
         Block b = {0, 0, block_width, block_padding_height ? block_padding_height : block_height};
         for (unsigned j = 1; j < num_block_cols; ++j) {
             b.col = (j-1)*block_width + tlb.width;
-            tasks[0][j] = new Task(std::bind(LCS_compute_top_block_ij<T>, std::ref(x), std::ref(y), std::ref(table), b));
+            tasks[0][j] = new Task(std::bind(LCS_compute_top_block_ij<T, Table>, std::ref(x), std::ref(y), std::ref(table), b));
             tasks[0][j]->add_prerequisite(tasks[0][j-1]);
             scheduler.add_postrequisite(tasks[0][j-1], tasks[0][j]);
         }
@@ -133,7 +118,7 @@ void LCS_compute_table_gq(T& x, T& y, ArrayTable<int>& table, unsigned thread_co
     for (unsigned i = 1; i < num_block_rows; ++i) {
         for (unsigned j = 1; j < num_block_cols; ++j) {
             Block b = {(i-1)*block_height + tlb.height, (j-1)*block_width + tlb.width, block_width, block_height};
-            tasks[i][j] = new Task(std::bind(LCS_compute_inner_block_ij<T>, std::ref(x), std::ref(y), std::ref(table), b));
+            tasks[i][j] = new Task(std::bind(LCS_compute_inner_block_ij<T, Table>, std::ref(x), std::ref(y), std::ref(table), b));
             tasks[i][j]->add_prerequisite(tasks[i-1][j]);
             tasks[i][j]->add_prerequisite(tasks[i][j-1]);
             scheduler.add_postrequisite(tasks[i-1][j], tasks[i][j]);
