@@ -46,7 +46,7 @@ void handle_error(int i)
 
 void transfer_input(std::istream& in, std::ostream& out)
 {
-    size_t len = 0;
+    unsigned len = 0;
     char buffer[100];
     do {
         in.getline(buffer, 100);
