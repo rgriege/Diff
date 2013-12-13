@@ -130,10 +130,10 @@ void test(const std::function<void()>& func, const char* title)
     }
 #endif
 
-    long int start = GetTimeInMilliseconds();
+    long int start = GetTimeInSeconds();
     func();
-    long int end = GetTimeInMilliseconds();
-    *output_stream << "Op took " << end - start << " ms" << std::endl << std::endl;
+    long int end = GetTimeInSeconds();
+    *output_stream << "Diff took " << end - start << " sec" << std::endl << std::endl;
 }
 
 void read(std::istream& in, Source<char>& source)
