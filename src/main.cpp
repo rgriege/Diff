@@ -32,7 +32,7 @@ bool block_ranged = false;
 unsigned num_threads = 1;
 bool thread_ranged = false;
 test_type type = CHAR_TEST;
-unsigned size = 10050;
+unsigned size = 0;
 bool print_table = false;
 bool print_sequence = false;
 
@@ -46,11 +46,14 @@ void handle_error(int i)
 
 void transfer_input(std::istream& in, std::ostream& out)
 {
+    size_t len = 0;
     char buffer[100];
     do {
         in.getline(buffer, 100);
         out << buffer;
+        len += 100;
     } while (strlen(buffer) == 99);
+    size = std::max(size, len);
 }
 
 // L1 data cache size is 32kB
@@ -83,7 +86,6 @@ void show_help()
     std::cout << "  -threads=[num]" << std::endl;
     std::cout << "  -thread_range" << std::endl;
     std::cout << "  -type=[char|word|line]" << std::endl;
-    std::cout << "  -size=[size]" << std::endl;
     std::cout << "  -print_table" << std::endl;
     std::cout << "  -print_sequence" << std::endl;
     std::cout << "  -help" << std::endl;
@@ -223,8 +225,12 @@ int main(int argc, char* argv[])
             return EXIT_FAILURE;
         } else if (arg.find("original=", 1) != arg.npos) {
             original_input_stream = new std::ifstream(arg.substr(10).c_str());
+            std::ifstream temp(arg.substr(10).c_str(), std::ios_base::ate);
+            size = std::max(size, unsigned(temp.tellg()));
         } else if (arg.find("modified=", 1) != arg.npos) {
             modified_input_stream = new std::ifstream(arg.substr(10).c_str());
+            std::ifstream temp(arg.substr(10).c_str(), std::ios_base::ate);
+            size = std::max(size, unsigned(temp.tellg()));
         } else if (arg.find("output=", 1) != arg.npos) {
             output_stream = new std::ofstream(arg.substr(8).c_str());
         } else if (arg.find("tests=", 1) != arg.npos) {
@@ -240,8 +246,6 @@ int main(int argc, char* argv[])
             thread_ranged = true;
         } else if (arg.find("type=", 1) != arg.npos) {
             type = arg.substr(6) == "char" ? CHAR_TEST : arg.substr(6) == "word" ? WORD_TEST : LINE_TEST;
-        } else if (arg.find("size=", 1) != arg.npos) {
-            size = atoi(arg.substr(6).c_str());
         } else if (arg.find("print_table", 1) != arg.npos) {
             print_table = true;
         } else if (arg.find("print_sequence", 1) != arg.npos) {
@@ -285,6 +289,10 @@ int main(int argc, char* argv[])
         *output_stream << "unsupported" << std::endl;
         break;
     }
+
+    delete original_input_stream;
+    delete modified_input_stream;
+    delete[] tests;
 
 #ifdef _DEBUG
     std::cout << "Press Enter to exit...";
