@@ -13,12 +13,12 @@
 //template <class T>
 //void LCS_compute_table_ij(T x, T y, ArrayTable<int> table)
 //{
-//    for (size_t i = 0; i <= x.length(); i++)
+//    for (size_t i = 0; i < table.height(); i++)
 //        table.at(i, 0) = 0;
-//    for (size_t j = 0; j <= y.length(); j++)
+//    for (size_t j = 0; j < table.width(); j++)
 //        table.at(0, j) = 0;
-//    for (size_t i = 1; i <= x.length(); ++i) {
-//        for (size_t j = 1; j <= y.length(); ++j) {
+//    for (size_t i = 1; i < table.height(); ++i) {
+//        for (size_t j = 1; j < table.width(); ++j) {
 //            if (x[i-1] == y[j-1])
 //                table.at(i, j) = table.at(i-1, j-1) + 1;
 //            else
@@ -30,12 +30,12 @@
 template <class T>
 void LCS_compute_table_ij(T& x, T& y, ArrayTable<int>& table)
 {
-    for (size_t i = 0; i <= x.length(); i++)
+    for (size_t i = 0; i < table.height(); i++)
         table[i][0] = 0;
-    for (size_t j = 0; j <= y.length(); j++)
+    for (size_t j = 0; j < table.width(); j++)
         table[0][j] = 0;
-    for (size_t i = 1; i <= x.length(); ++i) {
-        for (size_t j = 1; j <= y.length(); ++j) {
+    for (size_t i = 1; i < table.height(); ++i) {
+        for (size_t j = 1; j < table.width(); ++j) {
             if (x[i-1] == y[j-1])
                 table[i][j] = table[i-1][j-1] + 1;
             else
@@ -47,12 +47,12 @@ void LCS_compute_table_ij(T& x, T& y, ArrayTable<int>& table)
 template <class T>
 void LCS_compute_table_ji(T& x, T& y, ArrayTable<int>& table)
 {
-    for (size_t i = 0; i <= x.length(); i++)
+    for (size_t i = 0; i < table.height(); i++)
         table[i][0] = 0;
-    for (size_t j = 0; j <= y.length(); j++)
+    for (size_t j = 0; j < table.width(); j++)
         table[0][j] = 0;
-    for (size_t j = 1; j <= y.length(); ++j) {
-        for (size_t i = 1; i <= x.length(); ++i) {
+    for (size_t j = 1; j < table.width(); ++j) {
+        for (size_t i = 1; i < table.height(); ++i) {
             if (x[i-1] == y[j-1])
                 table[i][j] = table[i-1][j-1] + 1;
             else
@@ -64,13 +64,13 @@ void LCS_compute_table_ji(T& x, T& y, ArrayTable<int>& table)
 template <class T>
 void LCS_compute_table_ijij(T& x, T& y, ArrayTable<int>& table, int block_size)
 {
-    for (size_t i = 0; i <= x.length(); i++)
+    for (size_t i = 0; i < table.height(); i++)
         table[i][0] = 0;
-    for (size_t j = 0; j <= y.length(); j++)
+    for (size_t j = 0; j < table.width(); j++)
         table[0][j] = 0;
-    for (size_t ii = 1; ii <= x.length(); ii += block_size) {
+    for (size_t ii = 1; ii < table.height(); ii += block_size) {
         size_t imax = std::min(ii+block_size, x.length());
-        for (size_t jj = 1; jj <= y.length(); jj += block_size) {
+        for (size_t jj = 1; jj < table.width(); jj += block_size) {
             size_t jmax = std::min(jj+block_size, y.length());
             for (size_t i = ii; i <= imax; ++i) {
                 for (size_t j = jj; j <= jmax; ++j) {
@@ -87,13 +87,13 @@ void LCS_compute_table_ijij(T& x, T& y, ArrayTable<int>& table, int block_size)
 template <class T>
 void LCS_compute_table_jiji(T& x, T& y, ArrayTable<int>& table, int block_size)
 {
-    for (size_t i = 0; i <= x.length(); i++)
+    for (size_t i = 0; i < table.height(); i++)
         table[i][0] = 0;
-    for (size_t j = 0; j <= y.length(); j++)
+    for (size_t j = 0; j < table.width(); j++)
         table[0][j] = 0;
-    for (size_t jj = 1; jj <= y.length(); jj += block_size) {
+    for (size_t jj = 1; jj < table.width(); jj += block_size) {
         size_t jmax = std::min(jj+block_size, y.length());
-        for (size_t ii = 1; ii <= x.length(); ii += block_size) {
+        for (size_t ii = 1; ii < table.height(); ii += block_size) {
             size_t imax = std::min(ii+block_size, x.length());
             for (size_t j = jj; j <= jmax; ++j) {
                 for (size_t i = ii; i <= imax; ++i) {
@@ -110,13 +110,13 @@ void LCS_compute_table_jiji(T& x, T& y, ArrayTable<int>& table, int block_size)
 template <class T>
 void LCS_compute_table_jij(T& x, T& y, ArrayTable<int>& table, int block_size)
 {
-    for (size_t i = 0; i <= x.length(); i++)
+    for (size_t i = 0; i < table.height(); i++)
         table[i][0] = 0;
-    for (size_t j = 0; j <= y.length(); j++)
+    for (size_t j = 0; j < table.width(); j++)
         table[0][j] = 0;
-    for (size_t jj = 1; jj <= y.length(); jj += block_size) {
+    for (size_t jj = 1; jj < table.width(); jj += block_size) {
         size_t jmax = std::min(jj+block_size, y.length());
-        for (size_t i = 1; i <= x.length(); ++i) {
+        for (size_t i = 1; i < table.height(); ++i) {
             for (size_t j = jj; j <= jmax; ++j) {
                 if (x[i-1] == y[j-1])
                     table[i][j] = table[i-1][j-1] + 1;
@@ -141,7 +141,7 @@ void LCS_print_table(const T& x, const T& y, const ArrayTable<int>& table, std::
     out << std::endl;
     for (size_t i = 0; i < x.length(); i++) {
         out << x[i] << " ";
-        for (size_t j = 0; j <= y.length(); j++)
+        for (size_t j = 0; j < table.width(); j++)
             out << table[i+1][j] << " ";
         out << std::endl;
     }

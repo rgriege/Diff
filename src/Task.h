@@ -1,43 +1,41 @@
+#ifndef __TASK_H__
+#define __TASK_H__
+
 #include <functional>
 #include <deque>
-#include <cassert>
 #include <mutex>
+#include <atomic>
+
+enum TaskStatus {
+    WAITING,
+    READY,
+    SCHEDULED,
+    COMPLETE
+};
 
 class Task {
 public:
-    Task(std::function<void()> func, std::deque<Task*> prereqs, std::deque<Task*> postreqs)
-        : func(func), prereqs(prereqs), postreqs(postreqs) {}
+    Task(std::function<void()> _func, TaskStatus _status = WAITING, unsigned _priority = 32);
 
-    void execute()
-    {
-        assert(status == QUEUED);
-        func();
-        status = COMPLETE;
-    }
+    void add_prerequisite(Task* task);
 
-    Task* next_postreq()
-    {
-        if (postreqs.empty())
-            return NULL;
+    bool is_ready();
 
-        Task* next = postreqs.front();
-        postreqs.pop_front();
-        return next;
-    }
+    void schedule();
 
-    enum TaskStatus {
-        WAITING,
-        QUEUED,
-        COMPLETE
-    };
+    void execute();
 
-    TaskStatus status;
-
-    std::mutex status_mtx;
+    bool operator<(const Task& rhs) const { return priority < rhs.priority; }
 
 private:
-
     const std::function<void()> func;
-    std::deque<Task*> postreqs;
+    const unsigned priority;
+
     std::deque<Task*> prereqs;
+
+    /*TaskStatus status;
+    std::mutex status_mtx;*/
+    std::atomic<TaskStatus> status;
 };
+
+#endif
