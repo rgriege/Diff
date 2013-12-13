@@ -142,7 +142,7 @@ void test(const std::function<void()>& func, const char* title)
 
 void read(std::istream& in, Source<char>& source)
 {
-    in.read(source, source.length());
+    in.read(source, source.size());
     source.shrink_to_fit();
 }
 
@@ -158,14 +158,34 @@ void read(std::istream& in, Source<std::string>& source, char delim = ' ')
     source.shrink_to_fit();
 }
 
-template <class T, class Table>
+void read(std::istream& in, std::vector<char>& source)
+{
+    char buffer[200];
+    do {
+        in.getline(buffer, 200);
+        source.insert(source.end(), buffer, buffer + in.gcount());
+    } while (!in.eof());
+    source.shrink_to_fit();
+}
+
+void read(std::istream& in, std::vector<std::string>& source, char delim = ' ')
+{
+    char buffer[200];
+    do {
+        in.getline(buffer, 200, delim);
+        source.push_back(buffer);
+    } while (!in.eof());
+    source.shrink_to_fit();
+}
+
+template <class Container, class Table>
 void run_tests()
 {
     long int start = GetTimeInMilliseconds();
-    Source<T> x(size);
+    Container x; //(size);
     read(*original_input_stream, x);
 
-    Source<T> y(size);
+    Container y; //(size);
     read(*modified_input_stream, y);
     long int end = GetTimeInMilliseconds();
 
@@ -173,34 +193,33 @@ void run_tests()
 
     int lcs_len;
 
-    *output_stream << "Comparing arrays of size " << x.length() << " and " << y.length() << std::endl << std::endl;
+    *output_stream << "Comparing arrays of size " << x.size() << " and " << y.size() << std::endl << std::endl;
 
     for (unsigned i = 0; i < strlen(tests); ++i) {
-        //if (x.length() < 24000 && y.length() < 24000)
-        Table table(x.length() + 1, y.length() + 1);
+        Table table(x.size() + 1, y.size() + 1);
         switch (tests[i]) {
         case 'a':
-            test(std::bind(LCS_compute_table_ij<Source<T>, Table>, std::ref(x), std::ref(y), std::ref(table)), "Loop Order ij:");
+            test(std::bind(LCS_compute_table_ij<Container, Table>, std::ref(x), std::ref(y), std::ref(table)), "Loop Order ij:");
             break;
         case 'b':
-            test(std::bind(LCS_compute_table_ji<Source<T>, Table>, std::ref(x), std::ref(y), std::ref(table)), "Loop Order ji:");
+            test(std::bind(LCS_compute_table_ji<Container, Table>, std::ref(x), std::ref(y), std::ref(table)), "Loop Order ji:");
             break;
         case 'c':
             for (unsigned b = block_ranged ? 1 : block_size; b <= block_size; ++b) {
                 std::cout << std::endl << "Block Size: " << b << std::endl;
-                test(std::bind(LCS_compute_table_jiji<Source<T>, Table>, std::ref(x), std::ref(y), std::ref(table), b), "Block Order jiji:");
+                test(std::bind(LCS_compute_table_jiji<Container, Table>, std::ref(x), std::ref(y), std::ref(table), b), "Block Order jiji:");
             }
             break;
         case 'd':
             for (unsigned b = block_ranged ? 1 : block_size; b <= block_size; ++b) {
                 std::cout << std::endl << "Block Size: " << b << std::endl;
-                test(std::bind(LCS_compute_table_ijij<Source<T>, Table>, std::ref(x), std::ref(y), std::ref(table), b), "Block Order ijij:");
+                test(std::bind(LCS_compute_table_ijij<Container, Table>, std::ref(x), std::ref(y), std::ref(table), b), "Block Order ijij:");
             }
             break;
         case 'e':
             for (unsigned b = block_ranged ? 1 : block_size; b <= block_size; ++b) {
                 std::cout << std::endl << "Block Size: " << b << std::endl;
-                test(std::bind(LCS_compute_table_jij<Source<T>, Table>, std::ref(x), std::ref(y), std::ref(table), b), "Block Order jij:");
+                test(std::bind(LCS_compute_table_jij<Container, Table>, std::ref(x), std::ref(y), std::ref(table), b), "Block Order jij:");
             }
             break;
         case 'f':
@@ -208,7 +227,7 @@ void run_tests()
                 std::cout << std::endl << "Block Size: " << b << std::endl;
                 for (unsigned t = thread_ranged ? 1 : num_threads; t <= num_threads; ++t) {
                     std::cout << "Threads: " << t << std::endl;
-                    test(std::bind(LCS_compute_table_gq<Source<T>, Table>, std::ref(x), std::ref(y), std::ref(table), t, b, b), "Threaded Queue:");
+                    test(std::bind(LCS_compute_table_gq<Container, Table>, std::ref(x), std::ref(y), std::ref(table), t, b, b), "Threaded Queue:");
                 }
             }
             break;
@@ -295,11 +314,11 @@ int main(int argc, char* argv[])
     switch(type) {
     case CHAR_TEST:
         *output_stream << "Diffing by character" << std::endl;
-        run_tests<char, ArrayTable<int> >();
+        run_tests<std::vector<char>, ArrayTable<int> >();
         break;
     case WORD_TEST:
         *output_stream << "Diffing by word" << std::endl;
-        run_tests<std::string, ArrayTable<int> >();
+        run_tests<std::vector<std::string>, ArrayTable<int> >();
         break;
     case LINE_TEST:
         *output_stream << "unsupported" << std::endl;
