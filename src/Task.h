@@ -39,9 +39,11 @@ private:
 
     std::deque<Task*> prereqs;
 
-    /*TaskStatus status;
-    std::mutex status_mtx;*/
+#ifdef _WIN32
     std::atomic<TaskStatus> status;
+#else
+    std::atomic<int> status;
+#endif
 };
 
 #endif
