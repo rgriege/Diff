@@ -260,7 +260,8 @@ int main(int argc, char* argv[])
     }
 
     if (!tests) {
-        tests = new char[1]{0};
+        tests = new char[1];
+        tests[0] = 0;
     }
 
     if (original_input_stream == NULL) {
